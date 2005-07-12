@@ -1,4 +1,4 @@
-Test/MockObject version 0.04
+Test/MockObject version 0.06
 ============================
 
 Test::MockObject is a highly polymorphic testing object, capable of looking
@@ -6,6 +6,11 @@ like all sorts of objects.  This makes white-box testing much easier, as you
 can concentrate on what the code being tested sends to and receives from the
 mocked object, instead of worrying about faking up your own data.  (Another
 option is not to test difficult things.  Now you have no excuse.)
+
+Please note that it is possible to write highly detailed unit tests that pass
+even when your integration tests may fail.  Testing the pieces individually
+does not excuse you from testing the whole thing together.  I consider this to
+be a feature.
 
 INSTALLATION
 

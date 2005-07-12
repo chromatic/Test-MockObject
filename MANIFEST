@@ -4,3 +4,4 @@ MANIFEST
 lib/Test/MockObject.pm
 README
 t/base.t
+t/bugs.t

@@ -1,5 +1,16 @@
 Revision history for Perl extension Test::MockObject.
 
+0.06 Thu Jun 20 05:37:32 UTC 2002
+	- added t/bugs.t to catch regressions
+	- fixed several warnings:
+		- uninitialized values in called_pos_ok()
+		- improved diagnostics in called_pos_ok()
+		- avoid redefined subroutine warnings in fake_module()
+	- fixed behavior of called_pos_ok() -- avoid incorrect successes
+	- prevented called() from dying if $pos is out of range
+	- prevented _call() from autovivifying stack entries
+	- made fake_new() a wrapper around fake_module()
+
 0.05  Sun Jun  9 21:16:41 PDT 2002
 	- fixed tests for object passing
 	- added set_bound()

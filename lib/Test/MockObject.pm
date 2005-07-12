@@ -3,14 +3,14 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
 
 sub new {
 	my $class = shift;
-	bless {}, $class;
+	bless { _calls => [] }, $class;
 }
 
 sub add {
@@ -95,6 +95,7 @@ sub call_args {
 
 sub _call {
 	my ($self, $pos, $type) = @_;
+	return if abs($pos) > @{ $self->{_calls} };
 	$pos-- if $pos > 0;
 	return $self->{_calls}[$pos][$type];
 }
@@ -132,7 +133,11 @@ sub called_ok {
 sub called_pos_ok {
 	my ($self, $pos, $sub, $name) = @_;
 	$name ||= "object called '$sub' at position $pos";
-	$Test->ok( $self->call_pos($pos, $sub), $name );
+	my $called = $self->call_pos($pos, $sub);
+	unless ($Test->ok( (defined $called and $called eq $sub), $name )) {
+		$called = 'undef' unless defined $called;
+		$Test->diag("Got:\n\t'$called'\nExpected:\n\t'$sub'\n");
+	}
 }
 
 sub called_args_string_is {
@@ -152,6 +157,7 @@ sub fake_module {
 	$modname =~ s!::!/!g;
 	$INC{ $modname . '.pm' } = 1;
 
+	local $SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /redefined/ };
 	no strict 'refs';
 	foreach my $sub (keys %subs) {
 		unless (UNIVERSAL::isa( $subs{ $sub }, 'CODE')) {
@@ -165,8 +171,7 @@ sub fake_module {
 
 sub fake_new {
 	my ($self, $class) = @_;
-	no strict 'refs';
-	*{ $class . '::new' } = sub { $self };
+	$self->fake_module( $class, new => sub { $self } );
 }
 
 1;
@@ -196,6 +201,13 @@ Test::MockObject, you can get a lot closer.
 Test::MockObject allows you to create objects that conform to particular
 interfaces with very little code.  You don't have to reimplement the behavior,
 just the input and the output.
+
+=head2 IMPORTANT CAVEAT FOR TESTERS
+
+Please note that it is possible to write highly detailed unit tests that pass
+even when your integration tests may fail.  Testing the pieces individually
+does not excuse you from testing the whole thing together.  I consider this to
+be a feature.
 
 =head2 EXPORT
 
@@ -392,7 +404,11 @@ by default.  You can probably do much better.
 
 =over 4
 
-=item * Write an article about how to use this and why :)
+=item * Write an article about how to use this and why :) (soon)
+
+=item * Add an iterator interface to the call stack and arguments (soon)
+
+=item * Add a factory method to avoid namespace collisions (soon)
 
 =item * Handle C<isa()>
 
@@ -407,6 +423,9 @@ by default.  You can probably do much better.
 =head1 AUTHOR
 
 chromatic, E<lt>chromatic@wgz.orgE<gt>
+
+Thanks go to Curtis 'Ovid' Poe, as well as ONSITE! Technology, Inc., for
+finding several bugs and providing several constructive suggestions.
 
 =head1 SEE ALSO
 

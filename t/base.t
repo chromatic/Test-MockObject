@@ -126,13 +126,15 @@ eval { import::me->import() };
 is( $imported[0], 'import::me',
 	'fake_module() should install functions in new package namespace' );
 {
-	my $warn;
-	local $SIG{__WARN__} = sub {
-		$warn = shift;
+	my $carp;
+	$INC{'Carp.pm'} = 1;
+	local *Carp::carp;
+	*Carp::carp = sub {
+		$carp = shift;
 	};
 
 	$mock->fake_module( 'badimport', foo => 'bar' );
-	like( $warn, qr/'foo' is not a code reference/,
+	like( $carp, qr/'foo' is not a code reference/,
 		'... and should carp if it does not receive a function reference' );
 }
 
