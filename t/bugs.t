@@ -7,7 +7,7 @@ BEGIN
 }
 
 use strict;
-use Test::More tests => 9;
+use Test::More tests => 10;
 
 use Test::MockObject;
 my $mock = Test::MockObject->new();
@@ -77,3 +77,14 @@ $mock->fake_module( 'fakemodule' );
 	ok( %{ 'fakemodule::' },
 		'fake_module() should create a symbol table entry for the module' );
 }
+
+# respect list context at the end of a series
+$mock->set_series( count => 2, 3 );
+my $i;
+while (my ($count) = $mock->count())
+{
+	$i++;
+	last if $i > 2;
+}
+
+is( $i, 2, 'set_series() should return false at the end of a series' );

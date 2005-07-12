@@ -1,5 +1,8 @@
 Revision history for Perl extension Test::MockObject.
 
+0.11 Sat Jan 11 08:03:35 GMT 2003
+	- fix list context bug at end of series in set_series()
+
 0.10 Sun Jan  5 06:27:49 GMT 2003
 	- use flyweight objects (store state outside mocked objects)
 	- allow array, scalar, sub, and glob references as objects

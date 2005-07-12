@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.10';
+$VERSION = '0.11';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -29,9 +29,8 @@ sub add
 {
 	my $self = shift;
 	my $subs = _subs( $self );
-	if (exists $subs->{add} and !( UNIVERSAL::isa( $_[1], 'CODE' ))) {
-		return $subs->{add}->( $self, @_ );
-	}
+	return $subs->{add}->( $self, @_ )
+		 if (exists $subs->{add} and !( UNIVERSAL::isa( $_[1], 'CODE' )));
 	$self->mock( @_ );
 }
 
@@ -62,18 +61,23 @@ sub set_list
 sub set_series
 {
 	my ($self, $name, @list) = @_;
-	$self->mock( $name, sub { shift @list } );
+	$self->mock( $name, sub { return unless @list; shift @list } );
 }
 
 sub set_bound
 {
 	my ($self, $name, $ref) = @_;
 	my $code;
-	if (UNIVERSAL::isa( $ref, 'SCALAR' )) {
+	if (UNIVERSAL::isa( $ref, 'SCALAR' ))
+	{
 		$code = sub { $$ref };
-	} elsif (UNIVERSAL::isa( $ref, 'ARRAY' )) {
+	}
+	elsif (UNIVERSAL::isa( $ref, 'ARRAY' ))
+	{
 		$code = sub { @$ref };
-	} elsif (UNIVERSAL::isa( $ref, 'HASH' )) {
+	}
+	elsif (UNIVERSAL::isa( $ref, 'HASH' ))
+	{
 		$code = sub { %$ref };
 	}
 	$self->mock( $name, $code );
@@ -596,6 +600,8 @@ by default.  You can probably do much better.
 =item * Make C<fake_module()> and C<fake_new()> undoable
 
 =item * Add more useful methods (catch C<import()>?)
+
+=item * Move C<fake_module()> and C<fake_new()> into a Test::MockModule
 
 =back
 
