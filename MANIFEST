@@ -1,0 +1,6 @@
+Changes
+Makefile.PL
+MANIFEST
+lib/Test/MockObject.pm
+README
+t/base.t

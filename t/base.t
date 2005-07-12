@@ -1,0 +1,111 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+BEGIN {
+	chdir 't' if -d 't';
+	unshift @INC, '../lib';
+}
+
+use Test::More 'no_plan';
+use_ok( 'Test::MockObject' );
+
+# new()
+can_ok( 'Test::MockObject', 'new' );
+my $mock = Test::MockObject->new();
+isa_ok( $mock, 'Test::MockObject' );
+
+# add()
+can_ok( 'Test::MockObject', 'add' );
+$mock->add('foo');
+TODO: {
+	local $TODO = 'Test::More 0.44 should correct this';
+	can_ok( $mock, 'foo' );
+}
+
+# remove()
+can_ok( 'Test::MockObject', 'remove' );
+$mock->remove('foo');
+ok( ! $mock->can('foo'), 'remove() should remove a sub from potential action' );
+
+$mock->add('foo', sub { 'foo' });
+local $@;
+my $fooput = eval{ $mock->foo() };
+is( $@, '', 'add() should install callable subref' );
+is( $fooput, 'foo', '... which behaves normally' );
+
+can_ok( 'Test::MockObject', 'set_always' );
+$mock->set_always( 'bar', 'bar' );
+is( $mock->bar(), 'bar', 
+	'set_always() should add a sub that always returns its value' );
+is( $mock->bar(), 'bar', '... so it should at least do it twice in a row' );
+
+can_ok( 'Test::MockObject', 'set_true' );
+$mock->set_true( 'blah' );
+ok( $mock->blah(), 'set_true() should install a sub that returns true' );
+
+can_ok( 'Test::MockObject', 'set_false' );
+$mock->set_false( 'bloo' );
+ok( ! $mock->bloo(), 'set_false() should install a sub that returns false' );
+my @false = $mock->bloo();
+ok( ! @false, '... even in list context' );
+
+can_ok( 'Test::MockObject', 'set_list' );
+$mock->set_list( 'baz', ( 4 .. 6 ) );
+is( scalar $mock->baz(), 3, 'set_list() should install a sub to return a list');
+is( join('-', $mock->baz()), '4-5-6',
+	'... and the sub should always return the list' );
+
+can_ok( 'Test::MockObject', 'set_series' );
+$mock->set_series( 'amicae', 'Sunny', 'Kylie', 'Isabella' );
+is( $mock->amicae(), 'Sunny',
+	'set_series() should install a sub to return a series' );
+is( $mock->amicae(), 'Kylie', '... in order' );
+is( $mock->amicae(), 'Isabella', '... through the series' );
+ok( ! $mock->amicae(), '... but false when finishing the series' );
+
+can_ok( 'Test::MockObject', 'called' );
+$mock->foo();
+ok( $mock->called('foo'),
+	'called() should report true if named sub was called' );
+ok( ! $mock->called('notfoo'), '... and false if it was not' );
+
+can_ok( 'Test::MockObject', 'clear' );
+$mock->clear();
+is( scalar @{ $mock->{_calls} }, 0,
+	'clear() should clear recorded call stack' );
+
+can_ok( 'Test::MockObject', 'call_number' );
+$mock->foo(1, 2, 3);
+$mock->bar([ foo ]);
+$mock->baz($mock, 88);
+is( $mock->call_number(1), 'foo', 
+	'call_number() should report name of sub called by position' );
+is( $mock->call_number(-1), 'baz', '... and should handle negative numbers' );
+
+can_ok( 'Test::MockObject', 'call_args' );
+my ($arrref) = $mock->call_args(2);
+is( $arrref->[ 0 ], 'foo',
+	'call_args() should return args for sub called by position' );
+
+can_ok( 'Test::MockObject', 'call_args_string' );
+is( $mock->call_args_string(1, '-'), '1-2-3',
+	'call_args_string() should return args joined' );
+
+can_ok( 'Test::MockObject', 'call_args_pos' );
+is( $mock->call_args_pos(3, 1), $mock,
+	'call_args_argpos() should return argument for sub by position' );
+is( $mock->call_args_pos(-1, -1), 88,
+	'... handing negative positions equally well' );
+
+can_ok( 'Test::MockObject', 'called_ok' );
+$mock->called_ok( 'foo' );
+
+can_ok( 'Test::MockObject', 'called_number_ok' );
+$mock->called_number_ok( 1, 'foo' );
+
+can_ok( 'Test::MockObject', 'called_args_string_is' );
+$mock->called_args_string_is( 1, '-', '1-2-3' );
+
+can_ok( 'Test::MockObject', 'called_args_pos_is' );
+$mock->called_args_pos_is( 1, -1, 3 );
