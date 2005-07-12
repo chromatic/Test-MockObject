@@ -1,7 +1,10 @@
-Test::MockObject version 0.15
+Test::MockObject version 0.20
 =============================
 
 * NOTES *
+
+The documentation of T::MO::E is correct as of version 0.20.  Also, isa() works
+much better in T::MO, thanks to Stevan Little.
 
 You can now skip logging certain mocked methods in T::MO and T::MO::E version 0.15.  Finally!
 

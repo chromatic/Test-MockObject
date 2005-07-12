@@ -1,12 +1,18 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Test-MockObject
-version:      0.15
-version_from: lib/Test/MockObject.pm
-installdirs:  site
+--- #YAML:1.0
+name: Test-MockObject
+version: 0.20
+author: ~
+abstract: |-
+  Perl extension for emulating troublesome interfaces
+license: perl
 requires:
-    Scalar::Util:                  
-    Test::Simple:                  0.44
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.17
+  Scalar::Util: ''
+  Test::Simple: 0.47
+provides:
+  Test::MockObject:
+    file: lib/Test/MockObject.pm
+    version: 0.20
+  Test::MockObject::Extends:
+    file: lib/Test/MockObject/Extends.pm
+    version: 0.20
+generated_by: Module::Build version 0.2607

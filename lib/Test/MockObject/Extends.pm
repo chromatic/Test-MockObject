@@ -6,7 +6,7 @@ use Test::MockObject;
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.15';
+$VERSION = '0.20';
 
 sub new
 {
@@ -123,9 +123,9 @@ Test::MockObject::Extends - mock part of an object or class
   use Test::MockObject::Extends;
 
   my $object      = Some::Class->new();
-  my $mock_object = Test::MockObject::Extends( $object );
+  my $mock_object = Test::MockObject::Extends->new( $object );
 
-  $mock->set_true( 'parent_method' );
+  $mock_object->set_true( 'parent_method' );
 
 =head1 DESCRIPTION
 
@@ -185,7 +185,9 @@ C<Test::MockObject>, though this should be rare.
 
 =head1 AUTHOR
 
-chromatic, E<lt>chromatic@wgz.orgE<gt>
+chromatic, E<lt>chromatic at wgz dot orgE<gt>
+
+Documentation bug fixed by Stevan Little.
 
 =head1 BUGS
 

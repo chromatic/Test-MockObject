@@ -1,3 +1,4 @@
+Build.PL
 Changes
 Makefile.PL
 MANIFEST
@@ -7,5 +8,8 @@ README
 t/base.t
 t/bugs.t
 t/extends.t
+t/isa.t
 t/ignore.t
+t/0-signature.t
 META.yml                                 Module meta-data (added by MakeMaker)
+SIGNATURE    Added here by Module::Build

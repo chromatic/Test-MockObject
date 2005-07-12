@@ -1,5 +1,11 @@
 Revision history for Perl extension Test::MockObject.
 
+0.20
+	Wed Dec 15 02:57:48 UTC 2004 (chromatic)
+	- added set_isas() to Test::MockObject (Stevan Little)
+	- fixed typo in T::MO::E documentation (Stevan Little)
+	- added SIGNATURE and t/0-signature.t
+
 0.15
 	Sun Nov 14 04:53:01 UTC 2004
 	- allow skipping logging of certain methods (with tests and documentation)

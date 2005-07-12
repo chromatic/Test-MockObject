@@ -3,9 +3,9 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.15';
+$VERSION = '0.20';
 
-use Scalar::Util 'reftype';
+use Scalar::Util qw( reftype blessed );
 use Test::Builder;
 
 my $Test = Test::Builder->new();
@@ -38,6 +38,13 @@ sub add
 	return $subs->{add}->( $self, @_ )
 		 if (exists $subs->{add} and !( UNIVERSAL::isa( $_[1], 'CODE' )));
 	$self->mock( @_ );
+}
+
+sub set_isa 
+{
+    my ($self, @supers) = @_;
+    my $supers          = _isas( $self );
+    $supers->{$_}       = 1 for @supers;
 }
 
 sub set_always
@@ -98,14 +105,25 @@ sub set_bound
 	$self->mock( $name,  $bindings{reftype( $ref )} );
 }
 
-sub can
+BEGIN
 {
-	my ($self, $sub) = @_;
+	no strict 'refs';
 
-	# mockmethods are special cases, class methods are handled directly
-	my $subs = _subs( $self );
-	return $subs->{$sub} if (ref $self and exists $subs->{$sub});
-	return UNIVERSAL::can(@_);
+	for my $universal (
+		{ sub => \&_subs, name => 'can', parent => \&UNIVERSAL::can },
+		{ sub => \&_isas, name => 'isa', parent => \&UNIVERSAL::isa },
+	)
+	{
+		*{ $universal->{name} } = sub
+		{
+			my ($self, $sub) = @_; 
+
+			# mockmethods are special cases, class methods are handled directly
+			my $lookup = $universal->{sub}->( $self );
+			return $lookup->{$sub} if blessed $self and exists $lookup->{$sub};
+			return $universal->{parent}->( @_);
+		};
+	}
 }
 
 sub remove
@@ -326,6 +344,16 @@ sub fake_new
 	}
 }
 
+{
+	my %isas;
+    
+	sub _isas
+	{
+		my $key = shift;
+		$isas{ $key } ||= {};
+	}
+}
+
 1;
 
 __END__
@@ -418,8 +446,8 @@ Adds a coderef to the object.  This allows code to call the named method on the
 object.  For example, this code:
 
 	my $mock = Test::MockObject->new();
-	$mock->mock('fluorinate', 
-		sub { 'impurifying precious bodily fluids' });
+	$mock->mock( 'fluorinate', 
+		sub { 'impurifying precious bodily fluids' } );
 	print $mock->fluorinate;
 
 will print a helpful warning message.  Please note that methods are only added
@@ -511,6 +539,11 @@ eventually run out.
 Adds a method bound to a variable.  Pass in a reference to a variable in your
 test.  When you change the variable, the return value of the new method will
 change as well.  This is often handier than replacing mock methods.
+
+=item * C<set_isas( I<name1>, I<name2>, ... I<namen> )>
+
+Adds an apparent parent to the module, so that calling C<isa()> on the mock
+will return true appropriately.  Sometimes you really need this.
 
 =item * C<remove(I<name>)>
 
@@ -721,6 +754,8 @@ Jay Bonci also found a false positive in C<called_ok()>.  Thanks!
 Chris Winters was the first to report I'd accidentally scheduled 0.12 for
 deletion without uploading a newer version.  He also gave useful feedback on
 Test::MockObject::Extends.
+
+Stevan Little provided the impetus and code for C<set_isa()>.
 
 =head1 SEE ALSO
 
