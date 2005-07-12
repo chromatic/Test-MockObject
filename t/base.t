@@ -7,7 +7,7 @@ BEGIN {
 	unshift @INC, '../lib';
 }
 
-use Test::More tests => 77;
+use Test::More tests => 78;
 use_ok( 'Test::MockObject' );
 
 # new()
@@ -197,3 +197,6 @@ is( $mock->add(), 'ghost',
 isnt( $mock->add( 'fire', sub { return 'wheel' }), 'ghost',
 	'... but not if passed a name and subref' );
 is( $mock->fire(), 'wheel', '... instead installing the method' );
+$mock->{_subs}{add} = sub { return @_ };
+is_deeply( [ $mock->add( 'param' ) ], [ $mock, 'param' ],
+        '... should pass $self and "param"' );

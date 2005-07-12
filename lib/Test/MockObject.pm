@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -23,7 +23,7 @@ sub mock {
 sub add {
 	my $self = shift;
 	if (exists $self->{_subs}{add} and !( UNIVERSAL::isa( $_[1], 'CODE' ))) {
-		return $self->{_subs}{add}->( @_ );
+		return $self->{_subs}{add}->( $self, @_ );
 	}
 	$self->mock( @_ );
 }
@@ -133,7 +133,11 @@ sub next_call {
 
 sub AUTOLOAD {
 	my $self = $_[0];
-	my ($sub) = $AUTOLOAD =~ /::(\w+)\z/;
+	my $sub;
+	{
+		local $1;
+		($sub) = $AUTOLOAD =~ /::(\w+)\z/;
+	}
 	return if $sub eq 'DESTROY';
 
 	if (exists $self->{_subs}{$sub}) {

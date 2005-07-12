@@ -1,5 +1,10 @@
 Revision history for Perl extension Test::MockObject.
 
+0.08 Wed Jun 26 03:38:45 UTC 2002
+	- pass $self to added add() methods (Ilya Martynov)
+	- test for same (Ilya again)
+	- localize $1 in AUTOLOAD() to prevent its clobbering (bugfix, tested)
+
 0.07 Sat Jun 22 06:43:47 UTC 2002
 	- deprecated add()
 	- added mock()

@@ -61,3 +61,14 @@ like( $diag[0], qr/Got.+Expected/s, '... printing a helpful diagnostic' );
 unlike( $warn, qr/uninitialized value/,
 	'called_pos_ok() should not throw uninitialized value warnings on failure');
 like( $diag[1], qr/'undef'/, '... faking it with the word in the error' );
+
+$mock->clear();
+$mock->set_true( 'foo' );
+my $result;
+$_ = 'bar';
+if (/(\w+)/) {
+	$mock->foo( $1 );
+}
+is( $mock->call_args_pos( -1, 2 ), 'bar', 
+	'$1 should be preserved through AUTOLOAD invocation' );
+
