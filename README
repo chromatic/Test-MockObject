@@ -1,7 +1,12 @@
-Test::MockObject version 0.20
+Test::MockObject version 1.00
 =============================
 
 * NOTES *
+
+I removed T::MO::add() as of version 1.0.  I deprecated it a long, long time
+ago.  Also, T::MO::E should handle a few more types of extending now, but
+please report any weirdnesses to http://rt.cpan.org/ for this module if you run
+into trouble.
 
 The documentation of T::MO::E is correct as of version 0.20.  Also, isa() works
 much better in T::MO, thanks to Stevan Little.
@@ -42,19 +47,22 @@ INSTALLATION
 
 To install this module type the following:
 
-   perl Build.PL
-   make
-   make test
-   make install
+   $ perl Build.PL
+   $ ./Build
+   $ ./Build test
+   # ./Build install
+
+You can also use the Makefile.PL.  I don't.
 
 DEPENDENCIES
 
 This module requires these other modules and libraries:
 
 	Test::Simple version 0.44 or newer (I fixed a bug :)
+	Scalar::Util, without which you have a broken Perl installation
 
 COPYRIGHT AND LICENCE
 
-Copyright (c) 2002 - 2004 chromatic. All rights reserved.  This program is free
+Copyright (c) 2002 - 2005 chromatic. All rights reserved.  This program is free
 software; you can redistribute it and/or modify it under the same terms as Perl
 itself.

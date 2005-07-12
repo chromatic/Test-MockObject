@@ -7,7 +7,8 @@ BEGIN
 }
 
 use strict;
-use Test::More tests => 18;
+use Test::More tests => 20;
+use Test::Warn;
 
 my $module = 'Test::MockObject::Extends';
 use_ok( $module ) or exit;
@@ -19,8 +20,8 @@ $tme    = $module->new( 'Test::Builder' );
 ok( $tme->isa( 'Test::Builder' ),
 	'passing a class name to new() should set inheritance properly' );
 
-$tme = $module->new( 'File::Spec' );
-ok( $INC{'File/Spec.pm'},
+$tme = $module->new( 'CGI' );
+ok( $INC{'CGI.pm'},
 	'new() should load parent module unless already loaded' );
 
 package Some::Class;
@@ -83,9 +84,28 @@ $tme->set_always( -foo => 11 );
 is( $tme->foo(), 11, 'unlogged methods should work' );
 ok( ! $tme->called( 'foo' ), '... and logging should not happen for them' );
 
-my $warning    = '';
-$SIG{__WARN__} = sub { $warning = shift };
-$tme->set_always( foo => 12 );
+warning_is { $tme->set_always( foo => 12 ) } undef, 
+	'... not throwing redefinition warnings';
 is( $tme->foo(), 12,       '... allowing overriding with logged versions' );
 ok( $tme->called( 'foo' ), '... with logging happening then, obviously'   );
-is( $warning, '',          '... not throwing redefinition warnings' );
+
+package Parent;
+
+$INC{'Parent.pm'} = 1;
+
+use vars '$somethingnasty';
+$somethingnasty = '';
+
+sub new      { bless {}, $_[0] }
+
+sub mockthis { $somethingnasty = 1 }
+
+sub AUTOLOAD { return $_[0]->mockthis() }
+
+package main;
+
+my $parent = Parent->new();
+my $extend = Test::MockObject::Extends->new( $parent );
+$extend->mock( 'mockthis', sub { return 'foo' } );
+is( $extend->foo(), 'foo', 'Mocking worked' );
+ok( ! $Parent::somethingnasty, "Method didn't trigger bad method" );

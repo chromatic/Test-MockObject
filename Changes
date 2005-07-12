@@ -1,5 +1,15 @@
 Revision history for Perl extension Test::MockObject.
 
+1.00 
+	Tue Jul 12 01:49:06 UTC 2005 (chromatic)
+	- removed deprecated Test::MockObject::add()
+	- fixed stringification-finding bug (reported by water on Perl Monks)
+	- bumped up version numbers
+	- added POD and POD coverage tests
+	- added some documentation
+	- allow catchable warnings in fake_module()
+	- modify delegation approach (reported by Adam Kennedy in RT #13200)
+
 0.20
 	Wed Dec 15 02:57:48 UTC 2004 (chromatic)
 	- added set_isas() to Test::MockObject (Stevan Little)

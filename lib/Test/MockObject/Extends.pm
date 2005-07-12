@@ -6,7 +6,7 @@ use Test::MockObject;
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.20';
+$VERSION = '1.00';
 
 sub new
 {
@@ -17,12 +17,9 @@ sub new
 	my $parent_class = $class->get_class( $fake_class );
 	(my $load_class  = $parent_class) =~ s/::/\//g;
 	require $load_class . '.pm';
+	my $self         = blessed( $fake_class ) ? $fake_class : {};
 
-	bless
-	{
-		_parent => $fake_class,
-		tmo     => Test::MockObject->new(),
-	}, $class->gen_package( $parent_class );
+	bless $self, $class->gen_package( $parent_class );
 }
 
 sub get_class
@@ -37,12 +34,14 @@ my $packname = 'a';
 
 sub gen_package
 {
-	my ($class, $parent)    = @_;
-	my $package             = 'T::MO::E::' . $packname++;
+	my ($class, $parent)         = @_;
+	my $package                  = 'T::MO::E::' . $packname++;
 
 	no strict 'refs';
 	*{ $package . '::mock'     } = \&mock;
 	*{ $package . '::unmock'   } = \&unmock;
+	*{ $package . '::ISA'      } = [ $parent ];
+	*{ $package . '::can'      } = $class->gen_can( $parent );
 	*{ $package . '::isa'      } = $class->gen_isa( $parent );
 	*{ $package . '::AUTOLOAD' } = $class->gen_autoload( $parent );
 
@@ -57,13 +56,26 @@ sub gen_isa
 	{
 		my ($self, $class) = @_;
 		return 1 if $class eq $parent;
-		return $self->{_parent}->isa( $class );
+		return $parent->isa( $class );
+	};
+}
+
+sub gen_can
+{
+	my ($class, $parent) = @_;
+
+	sub
+	{
+		my ($self, $method) = @_;
+		my $parent_method   = $self->SUPER::can( $method );
+		return $parent_method if $parent_method;
+		return Test::MockObject->can( $method );
 	};
 }
 
 sub gen_autoload
 {
-	my ($class, $parent)    = @_;
+	my ($class, $parent) = @_;
 
 	sub
 	{
@@ -74,11 +86,16 @@ sub gen_autoload
 
 		if (my $parent_method  = $parent->can( $method ))
 		{
-			return $self->{_parent}->$parent_method( @_ );
+			return $self->$parent_method( @_ );
 		}
 		elsif (my $mock_method = Test::MockObject->can( $method ))
 		{
 			return $self->$mock_method( @_ );
+		}
+		elsif (my $parent_al = $parent->can( 'AUTOLOAD' ))
+		{
+			unshift @_, $self;
+			goto &$parent_al;
 		}
 	};
 }
@@ -174,6 +191,41 @@ mocking.
 
 =back
 
+=head1 INTERNAL METHODS
+
+To do its magic, this module uses several internal methods:
+
+=over 4
+
+=item * C<gen_autoload( $extended )>
+
+Returns an AUTOLOAD subroutine for the mock object that checks that the
+extended object (or class) can perform the requested method, that
+L<Test::MockObject> can perform it, or that the parent has an appropriate
+AUTOLOAD of its own.  (It should have its own C<can()> in that case too
+though.)
+
+=item * C<gen_can( $extended )>
+
+Returns a C<can()> method for the mock object that respects the same execution
+order as C<gen_autoload()>.
+
+=item * C<gen_isa( $extended )>
+
+Returns an C<isa()> method for the mock object that claims to be the
+C<$extended> object appropriately.
+
+=item * C<gen_package( $extended )>
+
+Creates a new unique package for the mock object with the appropriate methods
+already installed.
+
+=item * C<get_class( $invocant )>
+
+Returns the class name of the invocant, whether it's an object or a class name.
+
+=back
+
 =head1 CAVEATS
 
 There may be some weird corner cases with dynamically generated methods in the
@@ -187,7 +239,8 @@ C<Test::MockObject>, though this should be rare.
 
 chromatic, E<lt>chromatic at wgz dot orgE<gt>
 
-Documentation bug fixed by Stevan Little.
+Documentation bug fixed by Stevan Little.  Additional AUTOLOAD approach
+suggested by Adam Kennedy.
 
 =head1 BUGS
 
@@ -195,6 +248,5 @@ No known bugs.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004, chromatic.  All rights reserved.  This module is
-distributed under the same terms as Perl itself, in the hope that it is useful
-but certainly under no guarantee.
+Copyright (c) 2004 - 2005, chromatic.  All rights reserved.  You may use,
+modify, and distribute this module under the same terms as Perl 5.8.x.

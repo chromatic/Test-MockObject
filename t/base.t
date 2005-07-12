@@ -9,7 +9,8 @@ BEGIN
 }
 
 my $package = 'Test::MockObject';
-use Test::More tests => 100;
+use Test::More 'no_plan'; # tests => 93;
+use Test::Warn;
 use_ok( $package );
 
 # new()
@@ -22,6 +23,7 @@ can_ok( $mock, 'mock' );
 my $result = $mock->mock('foo');
 can_ok( $mock, 'foo' );
 is( $result, $mock, 'mock() should return itself' );
+is( $mock->foo(), undef, '... default mock should return nothing' );
 
 # remove()
 can_ok( $package, 'remove' );
@@ -144,18 +146,10 @@ $mock->fake_module( 'import::me', import => sub { push @imported, $_[0] });
 eval { import::me->import() };
 is( $imported[0], 'import::me',
 	'fake_module() should install functions in new package namespace' );
-{
-	my $carp;
-	$INC{'Carp.pm'} = 1;
-	local *Carp::carp;
-	*Carp::carp = sub {
-		$carp = shift;
-	};
 
-	$mock->fake_module( 'badimport', foo => 'bar' );
-	like( $carp, qr/'foo' is not a code reference/,
-		'... and should carp if it does not receive a function reference' );
-}
+warning_like { $mock->fake_module( 'badimport', foo => 'bar' ) }
+	qr/'foo' is not a code reference/,
+	'... and should carp if it does not receive a function reference';
 
 can_ok( $package, 'fake_new' );
 $mock->fake_new( 'Some::Module' );
@@ -210,21 +204,6 @@ is( $result, 'baz',
 is( $mock->next_call(), undef,
 	'... returning undef with no call in that position' );
 is( $result, 'baz', '... returning only the method name in scalar context' );
-
-# add()
-can_ok( $mock, 'add' );
-my $sub = sub { 'ghost' };
-$result = $mock->add( 'added', $sub );
-is( $mock->can( 'added' ), $sub, 'add() should still work' );
-is( $result, $mock, '... and should return itself' );
-is( $mock->added(), 'ghost',
-	'... should call mocked method add() if it exists' );
-isnt( $mock->add( 'fire', sub { return 'wheel' }), 'ghost',
-	'... but not if passed a name and subref' );
-is( $mock->fire(), 'wheel', '... instead installing the method' );
-$mock->mock( add => sub { return @_ } );
-is_deeply( [ $mock->add( 'param' ) ], [ $mock, 'param' ],
-	'... should pass $self and "param"' );
 
 # _calls()
 can_ok( $package, '_calls' );

@@ -1,18 +1,18 @@
---- #YAML:1.0
+---
 name: Test-MockObject
-version: 0.20
+version: 1.00
 author: ~
-abstract: |-
-  Perl extension for emulating troublesome interfaces
+abstract: Perl extension for emulating troublesome interfaces
 license: perl
 requires:
   Scalar::Util: ''
   Test::Simple: 0.47
+  Test::Warn: ''
 provides:
   Test::MockObject:
     file: lib/Test/MockObject.pm
-    version: 0.20
+    version: 1.00
   Test::MockObject::Extends:
     file: lib/Test/MockObject/Extends.pm
-    version: 0.20
-generated_by: Module::Build version 0.2607
+    version: 1.00
+generated_by: Module::Build version 0.2611

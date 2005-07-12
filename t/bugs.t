@@ -3,11 +3,11 @@
 BEGIN
 {
 	chdir 't' if -d 't';
-	unshift @INC, '../blib/lib', '../lib';
+	use lib '../lib', '../blib/lib';
 }
 
 use strict;
-use Test::More tests => 11;
+use Test::More tests => 14;
 
 use Test::MockObject;
 my $mock = Test::MockObject->new();
@@ -101,3 +101,20 @@ is( $i, 2, 'set_series() should return false at the end of a series' );
 }
 
 is( $result, 0, 'called_ok() should not report false positives' );
+
+package Override;
+
+my $id = 'default';
+
+use base 'Test::MockObject';
+use overload '""' => sub { return $id };
+
+package main;
+
+my $o = Override->new();
+$o->set_always( foo => 'foo' );
+
+is( "$o", 'default',  'default overloadings should work' );
+$id = 'my id';
+is( "$o", 'my id',    '... and not be static' );
+is( $o->foo(), 'foo', '... but should not interfere with method finding' );

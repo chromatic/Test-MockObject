@@ -3,9 +3,9 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.20';
+$VERSION = '1.00';
 
-use Scalar::Util qw( reftype blessed );
+use Scalar::Util qw( blessed refaddr reftype );
 use Test::Builder;
 
 my $Test = Test::Builder->new();
@@ -28,16 +28,6 @@ sub mock
 	_subs( $self )->{$name} = $sub;
 
 	$self;
-}
-
-# deprecated and complicated as of 0.07
-sub add
-{
-	my $self = shift;
-	my $subs = _subs( $self );
-	return $subs->{add}->( $self, @_ )
-		 if (exists $subs->{add} and !( UNIVERSAL::isa( $_[1], 'CODE' )));
-	$self->mock( @_ );
 }
 
 sub set_isa 
@@ -275,7 +265,8 @@ sub fake_module
 	$modname =~ s!::!/!g;
 	$INC{ $modname . '.pm' } = 1;
 
-	local $SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /redefined/ };
+	my $warn = $SIG{__WARN__};
+	local $SIG{__WARN__} = sub { $warn->( $_[0] ) unless $_[0] =~ /redefined/ };
 	no strict 'refs';
 	${ $modname . '::' }{VERSION} ||= -1;
 	
@@ -298,13 +289,18 @@ sub fake_new
 	$self->fake_module( $class, new => sub { $self } );
 }
 
+sub _get_key
+{
+	my $invocant = shift;
+	return blessed( $invocant ) ? refaddr( $invocant ) : $invocant;
+}
+
 {
 	my %calls;
 
 	sub _calls
 	{
-		my $key = shift;
-		$calls{ $key } ||= [];
+		$calls{ _get_key( shift ) } ||= [];
 	}
 }
 
@@ -313,8 +309,7 @@ sub fake_new
 
 	sub _subs
 	{
-		my $key = shift;
-		$subs{ $key } ||= {};
+		$subs{ _get_key( shift ) } ||= {};
 	}
 }
 
@@ -323,7 +318,8 @@ sub fake_new
 
 	sub _set_log
 	{
-		my ($key, $name, $log) = @_;
+		my $key          = _get_key( shift );
+		my ($name, $log) = @_;
 
 		$logs{$key} ||= {};
 
@@ -339,7 +335,8 @@ sub fake_new
 
 	sub _logs
 	{
-		my ($key, $name) = @_;
+		my $key    = _get_key( shift );
+		my ($name) = @_;
 		return exists $logs{$key}{$name};
 	}
 }
@@ -349,8 +346,7 @@ sub fake_new
     
 	sub _isas
 	{
-		my $key = shift;
-		$isas{ $key } ||= {};
+		$isas{ _get_key( shift ) } ||= {};
 	}
 }
 
@@ -540,7 +536,7 @@ Adds a method bound to a variable.  Pass in a reference to a variable in your
 test.  When you change the variable, the return value of the new method will
 change as well.  This is often handier than replacing mock methods.
 
-=item * C<set_isas( I<name1>, I<name2>, ... I<namen> )>
+=item * C<set_isa( I<name1>, I<name2>, ... I<namen> )>
 
 Adds an apparent parent to the module, so that calling C<isa()> on the mock
 will return true appropriately.  Sometimes you really need this.
@@ -554,6 +550,16 @@ Removes a named method.
 =head3 Checking Your Mocks
 
 =over 4
+
+=item * C<can( $method_name )>
+
+Returns a subroutine reference if this particular mocked object can handle the
+named method, false otherwise.
+
+=item * C<isa( $class_name )>
+
+Returns true if the invocant object mocks a particular class.  You must have
+used C<set_isa()> first.
 
 =item * C<called(I<name>)>
 
@@ -717,11 +723,21 @@ C<$mock> will log all subsequent calls to C<foo()> again.
 
 =head3 Subclassing
 
-If you want to subclass this module to override any behavior, see
-C<dispatch_mocked_method>.  This module uses this method to determine how to
-call a method not available in this class.  It also controls logging.  You may
-or may not find it useful, but I certainly take advantage of it for
-Test::MockObject::Extends.
+There are two methods provided for subclassing:
+
+=over 4
+
+=item * C<dispatch_mocked_method( $method_name, @_ )>
+
+This method determines how to call a method (named as C<$method_name>) not
+available in this class.  It also controls logging.  You may or may not find it
+useful, but I certainly take advantage of it for Test::MockObject::Extends.
+
+=item * C<log_call( $method_name, @_ )>
+
+This method tracks the call of the named method and its arguments.
+
+=back
 
 =head1 TODO
 
@@ -729,16 +745,7 @@ Test::MockObject::Extends.
 
 =item * Add a factory method to avoid namespace collisions (soon)
 
-=item * Handle C<isa()> -- done in Test::MockObject::Extends
-
-=item * Make C<fake_module()> and C<fake_new()> undoable -- done in
-Test::MockObject::Extends
-
-=item * Allow mocking but not logging certain methods (Piers' suggestion, done)
-
 =item * Add more useful methods (catch C<import()>?)
-
-=item * Move C<fake_module()> and C<fake_new()> into a Test::MockModule
 
 =back
 
@@ -766,10 +773,10 @@ L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2002E<sol>07E<sol>10E<sol>t
 
 =head1 COPYRIGHT
 
-Copyright 2002 - 2004 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
+Copyright 2002 - 2005 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
 
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
+This program is free software; you can use, modify, and redistribute it under
+the same terms as Perl 5.8.x itself.
 
 See http://www.perl.com/perl/misc/Artistic.html
 
