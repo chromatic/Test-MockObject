@@ -7,7 +7,7 @@ BEGIN {
 	unshift @INC, '../lib';
 }
 
-use Test::More tests => 62;
+use Test::More tests => 77;
 use_ok( 'Test::MockObject' );
 
 # new()
@@ -15,9 +15,9 @@ can_ok( 'Test::MockObject', 'new' );
 my $mock = Test::MockObject->new();
 isa_ok( $mock, 'Test::MockObject' );
 
-# add()
-can_ok( 'Test::MockObject', 'add' );
-$mock->add('foo');
+# mock()
+can_ok( $mock, 'mock' );
+$mock->mock('foo');
 can_ok( $mock, 'foo' );
 
 # remove()
@@ -28,10 +28,10 @@ ok( ! $mock->can('foo'), 'remove() should remove a sub from potential action' );
 # this is used for a couple of tests
 sub foo { 'foo' }
 
-$mock->add('foo', \&foo);
+$mock->mock('foo', \&foo);
 local $@;
 my $fooput = eval{ $mock->foo() };
-is( $@, '', 'add() should install callable subref' );
+is( $@, '', 'mock() should install callable subref' );
 is( $fooput, 'foo', '... which behaves normally' );
 
 is( $mock->can('foo'), \&foo, 'can() should return a subref' );
@@ -155,3 +155,45 @@ is( join('-', $mock->bound_array()), '3-5-7', '... handling array refs' );
 $arg = { foo => 'bar' };
 $mock->set_bound( 'bound_hash', $arg );
 is( join('-', $mock->bound_hash()), 'foo-bar', '... and hash refs' );
+
+{
+	local $INC{'Carp.pm'} = 1;
+	local *Carp::carp;
+
+	my @c;
+	*Carp::carp = sub {
+		push @c, shift;
+	};
+
+	$mock->notamethod();
+	is( @c, 1, 'Module should carp when calling a non-existant method' );
+	is( $c[0], "Un-mocked method 'notamethod()' called", '... warning as such');
+}
+
+# next_call()
+can_ok( $mock, 'next_call' );
+$mock->{_calls} = [ [ 'foo', [ 1, 2, 3 ] ], [ 'bar', [] ], [ 'baz', [] ] ];
+my ($method, $args) = $mock->next_call();
+is( $method, 'foo', 'next_call() should return first method' );
+isa_ok( $args, 'ARRAY', '... and args in a data structure which' );
+is( join('-', @$args), '1-2-3', '... containing the real arguments' );
+
+is( @{ $mock->{_calls} }, 2, '... and removing that call from the stack' );
+my $result = $mock->next_call( 2 );
+is( @{ $mock->{_calls} }, 0,
+	'... and should skip multiple calls, with an argument provided' );
+is( $mock->next_call(), undef,
+	'... returning undef with no call in that position' );
+is( $result, 'baz', '... returning only the method name in scalar context' );
+
+# add()
+can_ok( $mock, 'add' );
+my $sub = sub {};
+$mock->add( 'added', $sub );
+is( $mock->can( 'added' ), $sub, 'add() should still work' );
+$mock->{_subs}{add} = sub { return 'ghost' };
+is( $mock->add(), 'ghost',
+	'... should call mocked method add() if it exists' );
+isnt( $mock->add( 'fire', sub { return 'wheel' }), 'ghost',
+	'... but not if passed a name and subref' );
+is( $mock->fire(), 'wheel', '... instead installing the method' );

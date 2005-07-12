@@ -1,5 +1,11 @@
-Test/MockObject version 0.06
+Test/MockObject version 0.07
 ============================
+
+* NOTE *
+
+As of version 0.07, the add() method has been deprecated in favor of mock().
+It continues to work, for backwards compatibility purposes, but you are
+encouraged to migrate to mock().  (Thank you for using the module, though.  :)
 
 Test::MockObject is a highly polymorphic testing object, capable of looking
 like all sorts of objects.  This makes white-box testing much easier, as you

@@ -1,5 +1,13 @@
 Revision history for Perl extension Test::MockObject.
 
+0.07 Sat Jun 22 06:43:47 UTC 2002
+	- deprecated add()
+	- added mock()
+	- expanded and reorganized documentation somewhat()
+	- added next_call()
+	- added carp() for unknown mocked method call attempt
+		(what a description!)
+
 0.06 Thu Jun 20 05:37:32 UTC 2002
 	- added t/bugs.t to catch regressions
 	- fixed several warnings:

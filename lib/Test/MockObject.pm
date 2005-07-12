@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -13,35 +13,44 @@ sub new {
 	bless { _calls => [] }, $class;
 }
 
-sub add {
+sub mock {
 	my ($self, $name, $sub) = @_;
 	$sub ||= sub {};
 	$self->{_subs}{$name} = $sub;
 }
 
+# deprecated and complicated as of 0.07
+sub add {
+	my $self = shift;
+	if (exists $self->{_subs}{add} and !( UNIVERSAL::isa( $_[1], 'CODE' ))) {
+		return $self->{_subs}{add}->( @_ );
+	}
+	$self->mock( @_ );
+}
+
 sub set_always {
 	my ($self, $name, $value) = @_;
-	$self->add( $name, sub { $value } );
+	$self->mock( $name, sub { $value } );
 }
 
 sub set_true {
 	my ($self, $name) = @_;
-	$self->add( $name, sub { 1 } );
+	$self->mock( $name, sub { 1 } );
 }
 
 sub set_false {
 	my ($self, $name) = @_;
-	$self->add( $name, sub {} );
+	$self->mock( $name, sub {} );
 }
 
 sub set_list {
 	my ($self, $name, @list) = @_;
-	$self->add( $name, sub { @{[ @list ]} } );
+	$self->mock( $name, sub { @{[ @list ]} } );
 }
 
 sub set_series {
 	my ($self, $name, @list) = @_;
-	$self->add( $name, sub { shift @list } );
+	$self->mock( $name, sub { shift @list } );
 }
 
 sub set_bound {
@@ -54,7 +63,7 @@ sub set_bound {
 	} elsif (UNIVERSAL::isa( $ref, 'HASH' )) {
 		$code = sub { %$ref };
 	}
-	$self->add( $name, $code );
+	$self->mock( $name, $code );
 }
 
 sub can {
@@ -112,6 +121,16 @@ sub call_args_pos {
 	return $args->[$argpos];
 }
 
+sub next_call {
+	my ($self, $num) = @_;
+	$num ||= 1;
+
+	return unless @{ $self->{_calls} } >= $num;
+
+	my ($call) = (splice(@{ $self->{_calls} }, 0, $num))[-1];
+	return wantarray() ? @$call : $call->[0];
+}
+
 sub AUTOLOAD {
 	my $self = $_[0];
 	my ($sub) = $AUTOLOAD =~ /::(\w+)\z/;
@@ -120,6 +139,9 @@ sub AUTOLOAD {
 	if (exists $self->{_subs}{$sub}) {
 		push @{ $self->{_calls} }, [ $sub, [ @_ ] ];
 		goto &{ $self->{_subs}{$sub} };
+	} else {
+		require Carp;
+		Carp::carp("Un-mocked method '$sub()' called");
 	}
 	return;
 }
@@ -186,7 +208,7 @@ Test::MockObject - Perl extension for emulating troublesome interfaces
   use Test::MockObject;
   my $mock = Test::MockObject->new();
   $mock->set_true( 'somemethod' );
-  ok( $mock->somemethod );
+  ok( $mock->somemethod() );
 
 =head1 DESCRIPTION
 
@@ -220,6 +242,8 @@ interface.  For example, if you're testing something that relies on CGI.pm, you
 may find it easier to create a mock object that returns controllable results
 at given times than to fake query string input.
 
+B<The Basics>
+
 =over 4
 
 =item * C<new>
@@ -227,13 +251,27 @@ at given times than to fake query string input.
 Creates a new mock object.  Currently, this is a blessed hash.  In the future,
 there may be support for different types of objects.
 
-=item * C<add(I<name>, I<coderef>)>
+=back
+
+B<Mocking>
+
+Your mock object is nearly useless if you don't tell it what it's mocking.
+This is done by installing methods.  You control the output of these mocked
+methods.  In addition, any mocked method is tracked.  You can tell not only
+what was called, but which arguments were passed.  Please note that you cannot
+track non-mocked method calls.  They will still be allowed, though
+Test::MockObject will carp() about them.  This is considered a feature, though
+it may be possible to disable this in the future.
+
+=over 4
+
+=item * C<mock(I<name>, I<coderef>)>
 
 Adds a coderef to the object.  This allows the named method to be called on the
 object.  For example, this code:
 
 	my $mock = Test::MockObject->new();
-	$mock->add('fluorinate', 
+	$mock->mock('fluorinate', 
 		sub { 'impurifying precious bodily fluids' });
 	print $mock->fluorinate;
 
@@ -242,6 +280,52 @@ to a single object at a time and not the class.  (There is no small similarity
 to the Self programming language, or the Class::Prototyped module.)
 
 This method forms the basis for most of Test::MockObject's testing goodness.
+
+B<Please Note:> this method used to be called C<add()>.  Due to its ambiguity,
+it is now spelled differently.  For backwards compatibility purposes, add() is
+available, though deprecated as of version 0.07.  It goes to some contortions
+to try to do what you mean, but I make few guarantees.
+
+=item * C<fake_module(I<module name>), [ I<subname> => I<coderef>, ... ]
+
+Lies to Perl that a named module has already been loaded.  This is handy when
+providing a mockup of a real module if you'd like to prevent the actual module
+from interfering with the nice fakery.  If you're mocking L<Regexp::English>,
+say:
+
+	$mock->fake_module( 'Regexp::English' );
+
+This can be invoked both as a class and as an object method.  Beware that this
+must take place before the actual module has a chance to load.  Either wrap it
+in a BEGIN block before a use or require, or place it before a C<use_ok()> or
+C<require_ok()> call.
+
+You can optionally add functions to the mocked module by passing them as name
+=> coderef pairs to C<fake_module()>.  This is handy if you want to test an
+import():
+
+	my $import;
+	$mock->fake_module(
+		'Regexp::English',
+		import => sub { $import = caller }
+	);
+	use_ok( 'Regexp::Esperanto' );
+	is( $import, 'Regexp::Esperanto',
+		'Regexp::Esperanto should use() Regexp::English' );
+
+=item * C<fake_new(I<module name>)>
+
+Provides a fake constructor for the given module that returns the invoking mock
+object.  Used in conjunction with C<fake_module()>, you can force the tested
+unit to work with the mock object instead.
+
+	$mock->fake_module( 'CGI' );
+	$mock->fake_new( 'CGI' );
+
+	use_ok( 'Some::Module' );
+	my $s = Some::Module->new();
+	is( $s->{_cgi}, $mock,
+		'new() should create and store a new CGI object' );
 
 =item * C<set_always(I<name>, I<value>)>
 
@@ -279,6 +363,12 @@ change as well.  This is often handier than replacing mock methods.
 
 Removes a named method.
 
+=back
+
+B<Checking Your Mocks>
+
+=over 4
+
 =item * C<called(I<name>)>
 
 Checks to see if a named method has been called on the object.  This returns a
@@ -289,6 +379,60 @@ use this sparingly if you need to search through hundreds of calls.
 
 Clears the internal record of all method calls on the object.  It's handy to do
 this every now and then.
+
+=item * C<next_call([ I<position> ])>
+
+Returns the name and argument list of the next mocked method that was called on
+an object, in list context.  In scalar context, returns only the method name.
+There are two important things to know about this method.  First, it starts at
+the beginning of the call list.  If your code runs like this:
+
+	$mock->set_true( 'foo' );
+	$mock->set_true( 'bar' );
+	$mock->set_true( 'baz' );
+
+	$mock->foo();
+	$mock->bar( 3, 4 );
+	$mock->foo( 1, 2 );
+
+Then you might get output of:
+
+	my ($name, $args) = $mock->next_call();
+	print "$name (@$args)";
+
+	# prints 'foo'
+
+	$name = $mock->next_call();
+	print $name;
+
+	# prints 'bar'
+
+	($name, $args) = $mock->next_call();
+	print "$name (@$args)";
+
+	# prints 'foo 1 2'
+
+If you provide an optional number as the I<position> argument, the method will
+skip that many calls, returning the data for the last one skipped.
+
+	$mock->foo();
+	$mock->bar();
+	$mock->baz();
+
+	$name = $mock->next_call();
+	print $name;
+
+	# prints 'foo'
+
+	$name = $mock->next_call( 2 );
+	print $name
+
+	# prints 'baz'
+
+When it reaches the end of the list, it returns undef.  This is probably the
+most convenient method in the whole module, but for the sake of completeness
+and backwards compatibility (it takes me a while to reach the truest state of
+laziness!), there are several other methods.
 
 =item * C<call_pos(I<position>)>
 
@@ -329,45 +473,7 @@ Returns a stringified version of the arguments at the specified position.  If
 no separator is given, they will not be separated.  This can be used as:
 
 	is( $mock->call_args_string(1), "$mock initialize",
-		'... passing object and initialize as its arguments' );
-
-=item * C<fake_module(I<module name>), [ I<subname> => I<coderef>, ... ]
-
-Lies to Perl that a named module has already been loaded.  This is handy when
-providing a mockup of a real module if you'd like to prevent the actual module
-from interfering with the nice fakery.  If you're mocking L<Regexp::English>,
-say:
-
-	$mock->fake_module( 'Regexp::English' );
-
-This can be invoked both as a class and as an object method.  Beware that this
-must take place before the actual module has a chance to load.  Either wrap it
-in a BEGIN block before a use or require, or place it before a C<use_ok()> or
-C<require_ok()> call.
-
-You can optionally add functions to the mocked module by passing them as name
-=> coderef pairs to C<fake_module()>.  This is handy if you want to test an
-import():
-
-	my $import;
-	$mock->fake_module( 'Regexp::English', import => sub { $import = caller } );
-	use_ok( 'Regexp::Esperanto' );
-	is( $import, 'Regexp::Esperanto',
-		'Regexp::Esperanto should use() Regexp::English' );
-
-=item * C<fake_new(I<module name>)>
-
-Provides a fake constructor for the given module that returns the invoking mock
-object.  Used in conjunction with C<fake_module()>, you can force the tested
-unit to work with the mock object instead.
-
-	$mock->fake_module( 'CGI' );
-	$mock->fake_new( 'CGI' );
-
-	use_ok( 'Some::Module' );
-	my $s = Some::Module->new();
-	is( $s->{_cgi}, $mock,
-		'new() should create and store a new CGI object' );
+		'... passing object, initialize as arguments' );
 
 =item * C<called_ok(I<method name>, [ I<test name> ])>
 
@@ -404,9 +510,7 @@ by default.  You can probably do much better.
 
 =over 4
 
-=item * Write an article about how to use this and why :) (soon)
-
-=item * Add an iterator interface to the call stack and arguments (soon)
+=item * Write an article about how to use this and why :) (very soon)
 
 =item * Add a factory method to avoid namespace collisions (soon)
 
@@ -429,7 +533,8 @@ finding several bugs and providing several constructive suggestions.
 
 =head1 SEE ALSO
 
-L<perl>, L<Test::Tutorial>, L<Test::More>.
+L<perl>, L<Test::Tutorial>, L<Test::More>,
+L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2001E<sol>12E<sol>04E<sol>testing.html>.
 
 =head1 COPYRIGHT
 
