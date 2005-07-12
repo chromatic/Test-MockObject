@@ -7,4 +7,5 @@ README
 t/base.t
 t/bugs.t
 t/extends.t
+t/ignore.t
 META.yml                                 Module meta-data (added by MakeMaker)

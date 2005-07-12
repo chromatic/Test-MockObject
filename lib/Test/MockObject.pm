@@ -3,9 +3,11 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.14';
+$VERSION = '0.15';
 
+use Scalar::Util 'reftype';
 use Test::Builder;
+
 my $Test = Test::Builder->new();
 my (%calls, %subs);
 
@@ -20,7 +22,11 @@ sub mock
 {
 	my ($self, $name, $sub) = @_;
 	$sub ||= sub {};
+
+	# leading dash means unlog, otherwise do log
+	_set_log( $self, $name, ( $name =~ s/^-// ? 0 : 1 ) );
 	_subs( $self )->{$name} = $sub;
+
 	$self;
 }
 
@@ -79,20 +85,17 @@ sub set_series
 sub set_bound
 {
 	my ($self, $name, $ref) = @_;
-	my $code;
-	if (UNIVERSAL::isa( $ref, 'SCALAR' ))
-	{
-		$code = sub { $$ref };
-	}
-	elsif (UNIVERSAL::isa( $ref, 'ARRAY' ))
-	{
-		$code = sub { @$ref };
-	}
-	elsif (UNIVERSAL::isa( $ref, 'HASH' ))
-	{
-		$code = sub { %$ref };
-	}
-	$self->mock( $name, $code );
+
+	my %bindings =
+	(
+		SCALAR => sub { $$ref },
+		ARRAY  => sub { @$ref },
+		HASH   => sub { %$ref },
+
+	);
+
+	return unless exists $bindings{reftype( $ref )};
+	$self->mock( $name,  $bindings{reftype( $ref )} );
 }
 
 sub can
@@ -125,7 +128,7 @@ sub called
 
 sub clear
 {
-	my $self  = shift;
+	my $self             = shift;
 	@{ _calls( $self ) } = ();
 	$self;
 }
@@ -143,7 +146,7 @@ sub call_args
 sub _call
 {
 	my ($self, $pos, $type) = @_;
-	my $calls = _calls( $self );
+	my $calls               = _calls( $self );
 	return if abs($pos) > @$calls;
 	$pos-- if $pos > 0;
 	return $calls->[$pos][$type];
@@ -165,8 +168,8 @@ sub call_args_pos
 
 sub next_call
 {
-	my ($self, $num) = @_;
-	$num ||= 1;
+	my ($self, $num)  = @_;
+	$num            ||= 1;
 
 	my $calls = _calls( $self );
 	return unless @$calls >= $num;
@@ -210,6 +213,8 @@ sub dispatch_mocked_method
 sub log_call
 {
 	my ($self, $sub) = splice( @_, 0, 2 );
+
+	return unless _logs( $self, $sub );
 	push @{ _calls( $self ) }, [ $sub, [ @_ ] ];
 }
 
@@ -225,7 +230,8 @@ sub called_pos_ok
 	my ($self, $pos, $sub, $name) = @_;
 	$name ||= "object called '$sub' at position $pos";
 	my $called = $self->call_pos($pos, $sub);
-	unless ($Test->ok( (defined $called and $called eq $sub), $name )) {
+	unless ($Test->ok( (defined $called and $called eq $sub), $name ))
+	{
 		$called = 'undef' unless defined $called;
 		$Test->diag("Got:\n\t'$called'\nExpected:\n\t'$sub'\n");
 	}
@@ -255,8 +261,11 @@ sub fake_module
 	no strict 'refs';
 	${ $modname . '::' }{VERSION} ||= -1;
 	
-	foreach my $sub (keys %subs) {
-		unless (UNIVERSAL::isa( $subs{ $sub }, 'CODE')) {
+	for my $sub (keys %subs)
+	{
+		my $type = reftype( $subs{ $sub } ) || '';
+		unless ( $type eq 'CODE' )
+		{
 			require Carp;
 			Carp::carp("'$sub' is not a code reference" );
 			next;
@@ -288,6 +297,32 @@ sub fake_new
 	{
 		my $key = shift;
 		$subs{ $key } ||= {};
+	}
+}
+
+{
+	my %logs;
+
+	sub _set_log
+	{
+		my ($key, $name, $log) = @_;
+
+		$logs{$key} ||= {};
+
+		if ($log)
+		{
+			$logs{$key}{$name} = 1;
+		}
+		else
+		{
+			delete $logs{$key}{$name};
+		}
+	}
+
+	sub _logs
+	{
+		my ($key, $name) = @_;
+		return exists $logs{$key}{$name};
 	}
 }
 
@@ -330,6 +365,9 @@ Please note that it is possible to write highly detailed unit tests that pass
 even when your integration tests may fail.  Testing the pieces individually
 does not excuse you from testing the whole thing together.  I consider this to
 be a feature.
+
+In cases where you only need to mock one or two pieces of an existing module,
+consider L<Test::MockObject::Extends> instead.
 
 =head2 EXPORT
 
@@ -376,7 +414,7 @@ feature came about in version 0.09.  Shorter testing code is nice!
 
 =item * C<mock(I<name>, I<coderef>)>
 
-Adds a coderef to the object.  This allows the named method to be called on the
+Adds a coderef to the object.  This allows code to call the named method on the
 object.  For example, this code:
 
 	my $mock = Test::MockObject->new();
@@ -386,35 +424,34 @@ object.  For example, this code:
 
 will print a helpful warning message.  Please note that methods are only added
 to a single object at a time and not the class.  (There is no small similarity
-to the Self programming language, or the Class::Prototyped module.)
+to the Self programming language or the Class::Prototyped module.)
 
 This method forms the basis for most of Test::MockObject's testing goodness.
 
-B<Please Note:> this method used to be called C<add()>.  Due to its ambiguity,
-it is now spelled differently.  For backwards compatibility purposes, add() is
-available, though deprecated as of version 0.07.  It goes to some contortions
-to try to do what you mean, but I make few guarantees.
+B<Please Note:> this method used to be C<add()>.  Due to its ambiguity, it now
+has a different spelling.  For backwards compatibility purposes, add() is
+available, though version 0.07 deprecated it.  It goes to some contortions to
+try to do what you mean, but I make few guarantees.
 
 =item * C<fake_module(I<module name>), [ I<subname> => I<coderef>, ... ]
 
-B<Note:> this method will likely be extracted into a separate module in the
-near future.
+B<Note:> this method will likely become a separate module in the near future.
 
-Lies to Perl that a named module has already been loaded.  This is handy when
+Lies to Perl that it has already loaded a named module.  This is handy when
 providing a mockup of a real module if you'd like to prevent the actual module
 from interfering with the nice fakery.  If you're mocking L<Regexp::English>,
 say:
 
 	$mock->fake_module( 'Regexp::English' );
 
-This can be invoked both as a class and as an object method.  Beware that this
-must take place before the actual module has a chance to load.  Either wrap it
-in a BEGIN block before a use or require, or place it before a C<use_ok()> or
-C<require_ok()> call.
+This is both a class and as an object method.  Beware that this must take place
+before the actual module has a chance to load.  Either wrap it in a BEGIN block
+before a use or require or place it before a C<use_ok()> or C<require_ok()>
+call.
 
 You can optionally add functions to the mocked module by passing them as name
 => coderef pairs to C<fake_module()>.  This is handy if you want to test an
-import():
+C<import()>:
 
 	my $import;
 	$mock->fake_module(
@@ -465,9 +502,9 @@ to provide a list and not an array, if that's important to you.
 =item * C<set_series(I<name>, [ I<item1>, I<item2>, ... ]>
 
 Adds a method that will return the next item in a series on each call.  This
-can be an effective way to test error handling, by forcing a failure on the
-first method call and then subsequent successes.  Note that the series is
-(eventually) destroyed.
+can help to test error handling, by forcing a failure on the first method call
+and then subsequent successes.  Note that the series does not repeat; it will
+eventually run out.
 
 =item * C<set_bound(I<name>, I<reference>)>
 
@@ -487,16 +524,15 @@ Removes a named method.
 
 =item * C<called(I<name>)>
 
-Checks to see if a named method has been called on the object.  This returns a
-boolean value.  The current implementation does not scale especially well, so
-use this sparingly if you need to search through hundreds of calls.
+Checks to see if something has called a named method on the object.  This
+returns a boolean value.  The current implementation does not scale especially
+well, so use this sparingly if you need to search through hundreds of calls.
 
 =item * C<clear()>
 
 Clears the internal record of all method calls on the object.  It's handy to do
-this every now and then.  Note that this does not affect the methods that have
-been mocked for the object -- only the log of all methods that have been called
-until this point.
+this every now and then.  Note that this does not affect the mocked methods,
+only all of the methods called on the object to this point.
 
 It's handy to C<clear()> methods in between series of tests.  That makes it
 much easier to call C<next_method()> without having to skip over the calls from
@@ -504,8 +540,8 @@ the last set of tests.
 
 =item * C<next_call([ I<position> ])>
 
-Returns the name and argument list of the next mocked method that was called on
-an object, in list context.  In scalar context, returns only the method name.
+Returns the name and argument list of the next mocked method called on an
+object, in list context.  In scalar context, returns only the method name.
 There are two important things to know about this method.  First, it starts at
 the beginning of the call list.  If your code runs like this:
 
@@ -517,7 +553,7 @@ the beginning of the call list.  If your code runs like this:
 	$mock->bar( 3, 4 );
 	$mock->foo( 1, 2 );
 
-Then you might get output of:
+Then you might see output of:
 
 	my ($name, $args) = $mock->next_call();
 	print "$name (@$args)";
@@ -628,6 +664,24 @@ by default.  You can probably do much better.
 
 =back
 
+=head3 Logging
+
+Test::MockObject logs all mocked methods by default.  Sometimes you don't want
+to do this.  To prevent logging all calls to a given method, prepend the name
+of the method with C<-> when mocking it.
+
+That is:
+
+	$mock->set_true( '-foo', 'bar' );
+
+will set mock both C<foo()> and C<bar()>, causing both to return true.
+However, the object will log only calls to C<bar()>, not C<foo()>.  To log
+C<foo()> again, merely mock it again without the leading C<->:
+
+	$mock->set_true( '-foo' );
+
+C<$mock> will log all subsequent calls to C<foo()> again.
+
 =head3 Subclassing
 
 If you want to subclass this module to override any behavior, see
@@ -647,17 +701,17 @@ Test::MockObject::Extends.
 =item * Make C<fake_module()> and C<fake_new()> undoable -- done in
 Test::MockObject::Extends
 
+=item * Allow mocking but not logging certain methods (Piers' suggestion, done)
+
 =item * Add more useful methods (catch C<import()>?)
 
 =item * Move C<fake_module()> and C<fake_new()> into a Test::MockModule
-
-=item * Allow certain methods to be mocked but not logged (Piers' suggestion)
 
 =back
 
 =head1 AUTHOR
 
-chromatic, E<lt>chromatic@wgz.orgE<gt>
+chromatic, E<lt>chromatic at wgz dot orgE<gt>
 
 Thanks go to Curtis 'Ovid' Poe, as well as ONSITE! Technology, Inc., for
 finding several bugs and providing several constructive suggestions.
@@ -671,11 +725,13 @@ Test::MockObject::Extends.
 =head1 SEE ALSO
 
 L<perl>, L<Test::Tutorial>, L<Test::More>,
-L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2001E<sol>12E<sol>04E<sol>testing.html>.
+L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2001E<sol>12E<sol>04E<sol>testing.html>,
+and
+L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2002E<sol>07E<sol>10E<sol>tmo.html>.
 
 =head1 COPYRIGHT
 
-Copyright 2002 - 2004 by chromatic E<lt>chromatic@wgz.orgE<gt>.
+Copyright 2002 - 2004 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
 
 This program is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

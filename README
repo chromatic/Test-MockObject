@@ -1,9 +1,11 @@
-Test::MockObject version 0.14
+Test::MockObject version 0.15
 =============================
 
 * NOTES *
 
-I've added Test::MockObject::Extends in version 0.14.  This required making
+You can now skip logging certain mocked methods in T::MO and T::MO::E version 0.15.  Finally!
+
+I've added Test::MockObject:Extends in version 0.14.  This required making
 Test::MockObject a little more subclassable.
 
 As of version 0.12, I've fixed the false positives in called_ok().  Jay Bonci

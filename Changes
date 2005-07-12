@@ -1,5 +1,13 @@
 Revision history for Perl extension Test::MockObject.
 
+0.15
+	Sun Nov 14 04:53:01 UTC 2004
+	- allow skipping logging of certain methods (with tests and documentation)
+	- avoid subroutine redefinition warnings in T::MO::E
+
+	Sat Nov 13 05:32:29 UTC 2004
+	- fix Win32 test bug by not canonicalizing %INC paths (CPAN tester rrwo)
+
 0.14
 	Fri Mar 26 03:58:12 UTC 2004
 	- updated version number for new release

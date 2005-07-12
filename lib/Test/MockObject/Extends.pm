@@ -6,7 +6,7 @@ use Test::MockObject;
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.14';
+$VERSION = '0.15';
 
 sub new
 {
@@ -87,7 +87,11 @@ sub mock
 {
 	my ($self, $name, $sub) = @_;
 
+	Test::MockObject::_set_log( $self, $name, ( $name =~ s/^-// ? 0 : 1 ) );
+
 	no strict 'refs';
+	local $^W;
+
 	*{ ref( $self ) . '::' . $name } = sub 
 	{
 		my ($self) = @_;
@@ -100,6 +104,7 @@ sub unmock
 {
 	my ($self, $name) = @_;
 
+	Test::MockObject::_set_log( $self, $name, 0 );
 	no strict 'refs';
 	my $glob = *{ ref( $self ) . '::' };
 	delete $glob->{ $name };

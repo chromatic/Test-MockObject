@@ -3,11 +3,11 @@
 BEGIN
 {
 	chdir 't' if -d 't';
-	use lib '../lib', '../blib/lib';
+	use lib '../lib';
 }
 
 use strict;
-use Test::More tests => 13;
+use Test::More tests => 18;
 
 my $module = 'Test::MockObject::Extends';
 use_ok( $module ) or exit;
@@ -20,7 +20,7 @@ ok( $tme->isa( 'Test::Builder' ),
 	'passing a class name to new() should set inheritance properly' );
 
 $tme = $module->new( 'File::Spec' );
-ok( $INC{ File::Spec->catfile( qw( File Spec.pm ) ) },
+ok( $INC{'File/Spec.pm'},
 	'new() should load parent module unless already loaded' );
 
 package Some::Class;
@@ -47,8 +47,8 @@ package Another::Class;
 package main;
 
 # fake that we have loaded these
-$INC{ File::Spec->catfile(qw( Some    Class.pm ) ) } = 1;
-$INC{ File::Spec->catfile(qw( Another Class.pm ) ) } = 1;
+$INC{'Some/Class.pm'}    = 1;
+$INC{'Another/Class.pm'} = 1;
 
 $tme = $module->new( 'Some::Class' );
 $tme->set_always( bar => 'mocked' );
@@ -78,3 +78,14 @@ isa_ok( $mock_sc, 'Another::Class' )
 
 ok( ! $mock_sc->isa( 'No::Class' ),
 	'... returning the right result even when the class is not a parent' );
+
+$tme->set_always( -foo => 11 );
+is( $tme->foo(), 11, 'unlogged methods should work' );
+ok( ! $tme->called( 'foo' ), '... and logging should not happen for them' );
+
+my $warning    = '';
+$SIG{__WARN__} = sub { $warning = shift };
+$tme->set_always( foo => 12 );
+is( $tme->foo(), 12,       '... allowing overriding with logged versions' );
+ok( $tme->called( 'foo' ), '... with logging happening then, obviously'   );
+is( $warning, '',          '... not throwing redefinition warnings' );

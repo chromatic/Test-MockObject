@@ -5,7 +5,11 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
 	'NAME'         => 'Test::MockObject',
 	'VERSION_FROM' => 'lib/Test/MockObject.pm',      # finds $VERSION
-	'PREREQ_PM'    => { 'Test::Simple' => '0.44' },  # e.g., Module::Name => 1.1
+	'PREREQ_PM'    =>
+	{
+		'Test::Simple' => '0.44',
+		'Scalar::Util' => '',
+	},  # e.g., Module::Name => 1.1
 	(
 		$] >= 5.005
 		?    ## Add these new keywords supported since 5.005
