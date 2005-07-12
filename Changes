@@ -1,5 +1,9 @@
 Revision history for Perl extension Test::MockObject.
 
+0.12 Wed Feb  5 17:42:15 GMT 2003
+	- fix false positives in called_ok() (Jay Bonci found it)
+	- clarify documentation for clear() (Jay Bonci)
+
 0.11 Sat Jan 11 08:03:35 GMT 2003
 	- fix list context bug at end of series in set_series()
 

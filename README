@@ -1,7 +1,10 @@
-Test/MockObject version 0.11
+Test/MockObject version 0.12
 ============================
 
 * NOTES *
+
+As of version 0.12, I've fixed the false positives in called_ok().  Jay Bonci
+found this one and wrote the test case.  Oops.
 
 As of version 0.11, I've fixed a potential infinite loop with a set_series()
 mocked method called in list context.  Yuck.

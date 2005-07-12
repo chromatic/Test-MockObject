@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.11';
+$VERSION = '0.12';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -108,7 +108,7 @@ sub called
 		return 1 if $called->[0] eq $sub;
 	}
 
-	return;
+	return 0;
 }
 
 sub clear
@@ -461,7 +461,13 @@ use this sparingly if you need to search through hundreds of calls.
 =item * C<clear()>
 
 Clears the internal record of all method calls on the object.  It's handy to do
-this every now and then.
+this every now and then.  Note that this does not affect the methods that have
+been mocked for the object -- only the log of all methods that have been called
+until this point.
+
+It's handy to C<clear()> methods in between series of tests.  That makes it
+much easier to call C<next_method()> without having to skip over the calls from
+the last set of tests.
 
 =item * C<next_call([ I<position> ])>
 
@@ -603,6 +609,8 @@ by default.  You can probably do much better.
 
 =item * Move C<fake_module()> and C<fake_new()> into a Test::MockModule
 
+=item * Allow certain methods to be mocked but not logged (Piers' suggestion)
+
 =back
 
 =head1 AUTHOR
@@ -611,6 +619,8 @@ chromatic, E<lt>chromatic@wgz.orgE<gt>
 
 Thanks go to Curtis 'Ovid' Poe, as well as ONSITE! Technology, Inc., for
 finding several bugs and providing several constructive suggestions.
+
+Jay Bonci also found a false positive in C<called_ok()>.  Thanks!
 
 =head1 SEE ALSO
 

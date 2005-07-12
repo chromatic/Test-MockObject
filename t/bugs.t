@@ -3,11 +3,11 @@
 BEGIN
 {
 	chdir 't' if -d 't';
-	unshift @INC, '../blib/lib';
+	unshift @INC, '../blib/lib', '../lib';
 }
 
 use strict;
-use Test::More tests => 10;
+use Test::More tests => 11;
 
 use Test::MockObject;
 my $mock = Test::MockObject->new();
@@ -88,3 +88,16 @@ while (my ($count) = $mock->count())
 }
 
 is( $i, 2, 'set_series() should return false at the end of a series' );
+
+# Jay Bonci discovered false positives in called_ok() in 0.11
+{
+	local *Test::Builder::ok;
+	*Test::Builder::ok = sub {
+		$_[1];
+	};
+
+	my $new_mock = Test::MockObject->new();
+	$result = $new_mock->called_ok( 'foo' );
+}
+
+is( $result, 0, 'called_ok() should not report false positives' );
