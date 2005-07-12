@@ -7,7 +7,7 @@ BEGIN {
 	unshift @INC, '../lib';
 }
 
-use Test::More 'no_plan';
+use Test::More tests => 54;
 use_ok( 'Test::MockObject' );
 
 # new()
@@ -25,11 +25,16 @@ can_ok( 'Test::MockObject', 'remove' );
 $mock->remove('foo');
 ok( ! $mock->can('foo'), 'remove() should remove a sub from potential action' );
 
-$mock->add('foo', sub { 'foo' });
+# this is used for a couple of tests
+sub foo { 'foo' }
+
+$mock->add('foo', \&foo);
 local $@;
 my $fooput = eval{ $mock->foo() };
 is( $@, '', 'add() should install callable subref' );
 is( $fooput, 'foo', '... which behaves normally' );
+
+is( $mock->can('foo'), \&foo, 'can() should return a subref' );
 
 can_ok( 'Test::MockObject', 'set_always' );
 $mock->set_always( 'bar', 'bar' );

@@ -1,6 +1,11 @@
 Revision history for Perl extension Test::MockObject.
 
-0.01  Sat Apr 20 11:12:39 2002
-	- original version; created by h2xs 1.21 with options
-		-A -X -n Test::MockObject
+0.04  Mon Apr 29 01:03:36 UTC 2002
+	- pass tests in 5.005_03 (Tatsuhiko Miyagawa)
+	- can() should return subref instead of just 1 (also Tatsuhiko)
+	- added test for can() buglet (me)
+	- added test numbers (hey, it's CPAN time!)
 
+0.03  Sat Apr 27 11:12:39 2002
+	- first released version, initially created with:
+		h2xs -A -X -n Test::MockObject

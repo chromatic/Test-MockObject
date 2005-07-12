@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -15,6 +15,7 @@ sub new {
 
 sub add {
 	my ($self, $name, $sub) = @_;
+	$sub ||= sub {};
 	$self->{_subs}{$name} = $sub;
 }
 
@@ -47,7 +48,7 @@ sub can {
 	my ($self, $sub) = @_;
 
 	# mockmethods are special cases, class methods are handled directly
-	return 1 if (ref $self and exists $self->{_subs}{$sub});
+	return $self->{_subs}{$sub} if (ref $self and exists $self->{_subs}{$sub});
 	return UNIVERSAL::can(@_);
 }
 
@@ -103,7 +104,7 @@ sub AUTOLOAD {
 	return if $sub eq 'DESTROY';
 
 	if (exists $self->{_subs}{$sub}) {
-		push @{ $self->{_calls} }, [ $sub, \@_ ];
+		push @{ $self->{_calls} }, [ $sub, [ @_ ] ];
 		goto &{ $self->{_subs}{$sub} };
 	}
 	return;
