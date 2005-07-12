@@ -3,58 +3,70 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.09';
+$VERSION = '0.10';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
+my (%calls, %subs);
 
-sub new {
-	my $class = shift;
-	bless { _calls => [] }, $class;
+sub new
+{
+	my ($class, $type) = @_;
+	$type ||= {};
+	bless $type, $class;
 }
 
-sub mock {
+sub mock
+{
 	my ($self, $name, $sub) = @_;
 	$sub ||= sub {};
-	$self->{_subs}{$name} = $sub;
+	_subs( $self )->{$name} = $sub;
 	$self;
 }
 
 # deprecated and complicated as of 0.07
-sub add {
+sub add
+{
 	my $self = shift;
-	if (exists $self->{_subs}{add} and !( UNIVERSAL::isa( $_[1], 'CODE' ))) {
-		return $self->{_subs}{add}->( $self, @_ );
+	my $subs = _subs( $self );
+	if (exists $subs->{add} and !( UNIVERSAL::isa( $_[1], 'CODE' ))) {
+		return $subs->{add}->( $self, @_ );
 	}
 	$self->mock( @_ );
 }
 
-sub set_always {
+sub set_always
+{
 	my ($self, $name, $value) = @_;
 	$self->mock( $name, sub { $value } );
 }
 
-sub set_true {
+sub set_true
+{
 	my ($self, $name) = @_;
 	$self->mock( $name, sub { 1 } );
 }
 
-sub set_false {
+sub set_false
+{
 	my ($self, $name) = @_;
 	$self->mock( $name, sub {} );
 }
 
-sub set_list {
+sub set_list
+{
 	my ($self, $name, @list) = @_;
 	$self->mock( $name, sub { @{[ @list ]} } );
 }
 
-sub set_series {
+sub set_series
+{
 	my ($self, $name, @list) = @_;
 	$self->mock( $name, sub { shift @list } );
 }
 
-sub set_bound {
+sub set_bound
+{
 	my ($self, $name, $ref) = @_;
 	my $code;
 	if (UNIVERSAL::isa( $ref, 'SCALAR' )) {
@@ -67,74 +79,88 @@ sub set_bound {
 	$self->mock( $name, $code );
 }
 
-sub can {
+sub can
+{
 	my ($self, $sub) = @_;
 
 	# mockmethods are special cases, class methods are handled directly
-	return $self->{_subs}{$sub} if (ref $self and exists $self->{_subs}{$sub});
+	my $subs = _subs( $self );
+	return $subs->{$sub} if (ref $self and exists $subs->{$sub});
 	return UNIVERSAL::can(@_);
 }
 
-sub remove {
+sub remove
+{
 	my ($self, $sub) = @_;
-	delete $self->{_subs}{$sub};
+	delete _subs( $self )->{$sub};
 	$self;
 }
 
-sub called {
+sub called
+{
 	my ($self, $sub) = @_;
 	
-	for my $called (reverse @{ $self->{_calls} }) {
+	for my $called (reverse @{ _calls( $self ) }) {
 		return 1 if $called->[0] eq $sub;
 	}
 
 	return;
 }
 
-sub clear {
-	my $self = shift;
-	$self->{_calls} = [];
+sub clear
+{
+	my $self  = shift;
+	@{ _calls( $self ) } = ();
 	$self;
 }
 
-sub call_pos {
+sub call_pos
+{
 	$_[0]->_call($_[1], 0);
 }
 
-sub call_args {
+sub call_args
+{
 	return @{ $_[0]->_call($_[1], 1) };
 }
 
-sub _call {
+sub _call
+{
 	my ($self, $pos, $type) = @_;
-	return if abs($pos) > @{ $self->{_calls} };
+	my $calls = _calls( $self );
+	return if abs($pos) > @$calls;
 	$pos-- if $pos > 0;
-	return $self->{_calls}[$pos][$type];
+	return $calls->[$pos][$type];
 }
 
-sub call_args_string {
+sub call_args_string
+{
 	my $args = $_[0]->_call( $_[1], 1 ) or return;
 	return join($_[2] || '', @$args);
 }
 
-sub call_args_pos {
+sub call_args_pos
+{
 	my ($self, $subpos, $argpos) = @_;
 	my $args = $self->_call( $subpos, 1 ) or return;
 	$argpos-- if $argpos > 0;
 	return $args->[$argpos];
 }
 
-sub next_call {
+sub next_call
+{
 	my ($self, $num) = @_;
 	$num ||= 1;
 
-	return unless @{ $self->{_calls} } >= $num;
+	my $calls = _calls( $self );
+	return unless @$calls >= $num;
 
-	my ($call) = (splice(@{ $self->{_calls} }, 0, $num))[-1];
+	my ($call) = (splice(@$calls, 0, $num))[-1];
 	return wantarray() ? @$call : $call->[0];
 }
 
-sub AUTOLOAD {
+sub AUTOLOAD
+{
 	my $self = $_[0];
 	my $sub;
 	{
@@ -143,23 +169,29 @@ sub AUTOLOAD {
 	}
 	return if $sub eq 'DESTROY';
 
-	if (exists $self->{_subs}{$sub}) {
-		push @{ $self->{_calls} }, [ $sub, [ @_ ] ];
-		goto &{ $self->{_subs}{$sub} };
-	} else {
+	my $subs = _subs( $self );
+	if (exists $subs->{$sub})
+	{
+		push @{ _calls( $self ) }, [ $sub, [ @_ ] ];
+		goto &{ $subs->{$sub} };
+	}
+	else
+	{
 		require Carp;
 		Carp::carp("Un-mocked method '$sub()' called");
 	}
 	return;
 }
 
-sub called_ok {
+sub called_ok
+{
 	my ($self, $sub, $name) = @_;
 	$name ||= "object called '$sub'";
 	$Test->ok( $self->called($sub), $name );
 }
 
-sub called_pos_ok {
+sub called_pos_ok
+{
 	my ($self, $pos, $sub, $name) = @_;
 	$name ||= "object called '$sub' at position $pos";
 	my $called = $self->call_pos($pos, $sub);
@@ -169,19 +201,22 @@ sub called_pos_ok {
 	}
 }
 
-sub called_args_string_is {
+sub called_args_string_is
+{
 	my ($self, $pos, $sep, $expected, $name) = @_;
 	$name ||= "object sent expected args to sub at position $pos";
 	$Test->is_eq( $self->call_args_string( $pos, $sep ), $expected, $name );
 }
 
-sub called_args_pos_is {
+sub called_args_pos_is
+{
 	my ($self, $pos, $argpos, $arg, $name) = @_;
 	$name ||= "object sent expected arg '$arg' to sub at position $pos";
 	$Test->is_eq( $self->call_args_pos( $pos, $argpos ), $arg, $name );
 }
 
-sub fake_module {
+sub fake_module
+{
 	my ($class, $modname, %subs) = @_;
 	$modname =~ s!::!/!g;
 	$INC{ $modname . '.pm' } = 1;
@@ -200,12 +235,34 @@ sub fake_module {
 	}
 }
 
-sub fake_new {
+sub fake_new
+{
 	my ($self, $class) = @_;
 	$self->fake_module( $class, new => sub { $self } );
 }
 
+{
+	my %calls;
+
+	sub _calls
+	{
+		my $key = shift;
+		$calls{ $key } ||= [];
+	}
+}
+
+{
+	my %subs;
+
+	sub _subs
+	{
+		my $key = shift;
+		$subs{ $key } ||= {};
+	}
+}
+
 1;
+
 __END__
 
 =head1 NAME
@@ -261,8 +318,13 @@ B<The Basics>
 
 =item * C<new>
 
-Creates a new mock object.  Currently, this is a blessed hash.  In the future,
-there may be support for different types of objects.
+Creates a new mock object.  By default, this is a blessed hash.  Pass a
+reference to bless that reference.
+
+	my $mock_array  = Test::MockObject->new( [] );
+	my $mock_scalar = Test::MockObject->new( \( my $scalar ) );
+	my $mock_code   = Test::MockObject->new( sub {} );
+	my $mock_glob   = Test::MockObject->new( \*GLOB );
 
 =back
 
@@ -278,7 +340,7 @@ it may be possible to disable this in the future.
 
 As implied in the example above, it's possible to chain these calls together.
 Thanks to a suggestion from the fabulous Piers Cawley (CPAN RT #1249), this
-feature came about in version 0.09.  Shorter testing code is nice!k
+feature came about in version 0.09.  Shorter testing code is nice!
 
 =over 4
 
@@ -527,15 +589,11 @@ by default.  You can probably do much better.
 
 =over 4
 
-=item * Write an article about how to use this and why :) (very soon)
-
 =item * Add a factory method to avoid namespace collisions (soon)
 
 =item * Handle C<isa()>
 
 =item * Make C<fake_module()> and C<fake_new()> undoable
-
-=item * Allow different types of blessed referents
 
 =item * Add more useful methods (catch C<import()>?)
 
@@ -555,7 +613,7 @@ L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2001E<sol>12E<sol>04E<sol>t
 
 =head1 COPYRIGHT
 
-Copyright 2002 by chromatic E<lt>chromatic@wgz.orgE<gt>.
+Copyright 2002 - 2003 by chromatic E<lt>chromatic@wgz.orgE<gt>.
 
 This program is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

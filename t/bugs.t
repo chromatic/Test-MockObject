@@ -1,12 +1,13 @@
 #!/usr/bin/perl -w
 
-BEGIN {
+BEGIN
+{
 	chdir 't' if -d 't';
 	unshift @INC, '../blib/lib';
 }
 
 use strict;
-use Test::More 'no_plan';
+use Test::More tests => 9;
 
 use Test::MockObject;
 my $mock = Test::MockObject->new();
@@ -14,9 +15,7 @@ my $mock = Test::MockObject->new();
 {
 	local $@ = '';
 	eval { $mock->called( 1, 'foo' ) };
-	my $stack = $mock->{_calls};
 	is( $@, '', 'called() should not die from no array ref object' );
-	isa_ok( $stack, 'ARRAY', 'new() should create an empty call stack which' );
 }
 
 {

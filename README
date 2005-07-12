@@ -1,7 +1,11 @@
-Test/MockObject version 0.09
+Test/MockObject version 0.10
 ============================
 
 * NOTE *
+
+As of version 0.10, mock objects no longer store their state within the objects
+themselves.  That also means that you can have mock objects that aren't hash
+references. Nifty.
 
 As of version 0.09, method chaining works for mocking methods.  Handy!  Use it!
 

@@ -1,5 +1,10 @@
 Revision history for Perl extension Test::MockObject.
 
+0.10 Sun Jan  5 06:27:49 GMT 2003
+	- use flyweight objects (store state outside mocked objects)
+	- allow array, scalar, sub, and glob references as objects
+	- minor typo fixes and brace placement fixings
+
 0.09 Sun Jun 30 21:14:29 PDT 2002
 	- made most mocking methods return $self (Piers Cawley's suggestion)
 	- add $VERSION when mocking a module (ensure package is not empty)
