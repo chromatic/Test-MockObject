@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'		=> 'Test::MockObject',
     'VERSION_FROM'	=> 'lib/Test/MockObject.pm', # finds $VERSION
-    'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
+    'PREREQ_PM'		=> { 'Test::Simple' => '0.44' }, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM => 'lib/Test/MockObject.pm', # retrieve abstract from module
 	  AUTHOR     => 'chromatic <chromatic@wgz.org>') : ()),

@@ -18,10 +18,7 @@ isa_ok( $mock, 'Test::MockObject' );
 # add()
 can_ok( 'Test::MockObject', 'add' );
 $mock->add('foo');
-TODO: {
-	local $TODO = 'Test::More 0.44 should correct this';
-	can_ok( $mock, 'foo' );
-}
+can_ok( $mock, 'foo' );
 
 # remove()
 can_ok( 'Test::MockObject', 'remove' );
@@ -75,13 +72,13 @@ $mock->clear();
 is( scalar @{ $mock->{_calls} }, 0,
 	'clear() should clear recorded call stack' );
 
-can_ok( 'Test::MockObject', 'call_number' );
+can_ok( 'Test::MockObject', 'call_pos' );
 $mock->foo(1, 2, 3);
 $mock->bar([ foo ]);
 $mock->baz($mock, 88);
-is( $mock->call_number(1), 'foo', 
-	'call_number() should report name of sub called by position' );
-is( $mock->call_number(-1), 'baz', '... and should handle negative numbers' );
+is( $mock->call_pos(1), 'foo', 
+	'call_pos() should report name of sub called by position' );
+is( $mock->call_pos(-1), 'baz', '... and should handle negative numbers' );
 
 can_ok( 'Test::MockObject', 'call_args' );
 my ($arrref) = $mock->call_args(2);
@@ -91,6 +88,7 @@ is( $arrref->[ 0 ], 'foo',
 can_ok( 'Test::MockObject', 'call_args_string' );
 is( $mock->call_args_string(1, '-'), '1-2-3',
 	'call_args_string() should return args joined' );
+is( $mock->call_args_string(1), '123', '... with no default separator' );
 
 can_ok( 'Test::MockObject', 'call_args_pos' );
 is( $mock->call_args_pos(3, 1), $mock,
@@ -101,11 +99,21 @@ is( $mock->call_args_pos(-1, -1), 88,
 can_ok( 'Test::MockObject', 'called_ok' );
 $mock->called_ok( 'foo' );
 
-can_ok( 'Test::MockObject', 'called_number_ok' );
-$mock->called_number_ok( 1, 'foo' );
+can_ok( 'Test::MockObject', 'called_pos_ok' );
+$mock->called_pos_ok( 1, 'foo' );
 
 can_ok( 'Test::MockObject', 'called_args_string_is' );
 $mock->called_args_string_is( 1, '-', '1-2-3' );
 
 can_ok( 'Test::MockObject', 'called_args_pos_is' );
 $mock->called_args_pos_is( 1, -1, 3 );
+
+can_ok( 'Test::MockObject', 'fake_module' );
+$mock->fake_module( 'Some::Module' );
+is( $ENV{'Some/Module.pm'}, 1, 
+	'fake_module() should prevent a module from being loaded' );
+
+can_ok( 'Test::MockObject', 'fake_new' );
+$mock->fake_new( 'Some::Module' );
+is( Some::Module->new(), $mock, 
+	'fake_new() should create a fake constructor to return mock object' );
