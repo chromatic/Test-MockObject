@@ -5,3 +5,4 @@ lib/Test/MockObject.pm
 README
 t/base.t
 t/bugs.t
+META.yml                                 Module meta-data (added by MakeMaker)

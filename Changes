@@ -1,5 +1,11 @@
 Revision history for Perl extension Test::MockObject.
 
+0.13 Sat Dec 20 00:16:36 UTC 2003
+	- new release 'cuz I accidentally deleted 0.12 from the CPAN (Chris Winters
+	  reported it)
+	- make set_true() and set_false() work on lists of method names
+	- marked fake_module() and fake_new() as potentially deprecated
+
 0.12 Wed Feb  5 17:42:15 GMT 2003
 	- fix false positives in called_ok() (Jay Bonci found it)
 	- clarify documentation for clear() (Jay Bonci)

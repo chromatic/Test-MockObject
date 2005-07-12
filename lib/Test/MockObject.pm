@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.12';
+$VERSION = '0.13';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -42,14 +42,26 @@ sub set_always
 
 sub set_true
 {
-	my ($self, $name) = @_;
-	$self->mock( $name, sub { 1 } );
+	my $self = shift;
+
+	for my $name ( @_ )
+	{
+		$self->mock( $name, sub { 1 } );
+	}
+
+	return $self;
 }
 
 sub set_false
 {
-	my ($self, $name) = @_;
-	$self->mock( $name, sub {} );
+	my $self = shift;
+
+	for my $name ( @_ )
+	{
+		$self->mock( $name, sub {} );
+	}
+
+	return $self;
 }
 
 sub set_list
@@ -371,6 +383,9 @@ to try to do what you mean, but I make few guarantees.
 
 =item * C<fake_module(I<module name>), [ I<subname> => I<coderef>, ... ]
 
+B<Note:> this method will likely be extracted into a separate module in the
+near future.
+
 Lies to Perl that a named module has already been loaded.  This is handy when
 providing a mockup of a real module if you'd like to prevent the actual module
 from interfering with the nice fakery.  If you're mocking L<Regexp::English>,
@@ -398,6 +413,9 @@ import():
 
 =item * C<fake_new(I<module name>)>
 
+B<Note:> this method will likely be extracted into a separate module in the
+near future.
+
 Provides a fake constructor for the given module that returns the invoking mock
 object.  Used in conjunction with C<fake_module()>, you can force the tested
 unit to work with the mock object instead.
@@ -414,15 +432,16 @@ unit to work with the mock object instead.
 
 Adds a method of the specified name that always returns the specified value.
 
-=item * C<set_true(I<name>)>
+=item * C<set_true(I<name_1>, I<name_2>, ... I<name_n>)>
 
-Adds a method of the specified name that always returns a true value.
+Adds a method of the specified name that always returns a true value.  This can
+take a list of names. 
 
-=item * C<set_false(I<name>)>
+=item * C<set_false(I<name_1>, I<name_2>, ... I<name_n>)>
 
 Adds a method of the specified name that always returns a false value.  (Since
 it installs an empty subroutine, the value should be false in both scalar and
-list contexts.)
+list contexts.)  This can take a list of names.
 
 =item * C<set_list(I<name>, [ I<item1>, I<item2>, ... ]>
 
@@ -621,6 +640,9 @@ Thanks go to Curtis 'Ovid' Poe, as well as ONSITE! Technology, Inc., for
 finding several bugs and providing several constructive suggestions.
 
 Jay Bonci also found a false positive in C<called_ok()>.  Thanks!
+
+Chris Winters was the first to report I'd accidentally scheduled 0.12 for
+deletion without uploading a newver version.
 
 =head1 SEE ALSO
 

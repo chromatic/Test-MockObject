@@ -2,13 +2,14 @@
 
 use strict;
 
-BEGIN {
+BEGIN
+{
 	chdir 't' if -d 't';
-	unshift @INC, '../lib';
+	use lib '../lib';
 }
 
 my $package = 'Test::MockObject';
-use Test::More tests => 93;
+use Test::More tests => 100;
 use_ok( $package );
 
 # new()
@@ -48,14 +49,24 @@ is( $result, $mock, '... returning itself' );
 
 can_ok( $package, 'set_true' );
 $result = $mock->set_true( 'blah' );
-ok( $mock->blah(), 'set_true() should install a sub that returns true' );
+ok( $mock->blah(),  'set_true() should install a sub that returns true' );
+$result = $mock->set_true( qw( true1 true2 true3 ) );
+ok( $mock->true1(), '... or multiple subs' );
+ok( $mock->true2(), '... all' );
+ok( $mock->true3(), '... returning true' );
+is( $result, $mock, '... and should return itself' );
 
 can_ok( $package, 'set_false' );
 $result = $mock->set_false( 'bloo' );
-ok( ! $mock->bloo(), 'set_false() should install a sub that returns false' );
+ok( ! $mock->bloo(),    'set_false() should install a sub that returns false' );
 my @false = $mock->bloo();
-ok( ! @false, '... even in list context' );
-is( $result, $mock, '... and should return itself' );
+ok( ! @false,           '... even in list context' );
+is( $result, $mock,     '... and should return itself' );
+
+$result = $mock->set_false( qw( false1 false2 false3 ) );
+ok( ! $mock->false1(),  '... or multiple subs' );
+ok( ! $mock->false2(),  '... all' );
+ok( ! $mock->false3(),  '... returning false' );
 
 can_ok( $package, 'set_list' );
 $result = $mock->set_list( 'baz', ( 4 .. 6 ) );
