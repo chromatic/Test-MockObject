@@ -7,7 +7,7 @@ BEGIN {
 	unshift @INC, '../lib';
 }
 
-use Test::More tests => 78;
+use Test::More tests => 87;
 use_ok( 'Test::MockObject' );
 
 # new()
@@ -17,13 +17,15 @@ isa_ok( $mock, 'Test::MockObject' );
 
 # mock()
 can_ok( $mock, 'mock' );
-$mock->mock('foo');
+my $result = $mock->mock('foo');
 can_ok( $mock, 'foo' );
+is( $result, $mock, 'mock() should return itself' );
 
 # remove()
 can_ok( 'Test::MockObject', 'remove' );
-$mock->remove('foo');
+$result = $mock->remove('foo');
 ok( ! $mock->can('foo'), 'remove() should remove a sub from potential action' );
+is( $result, $mock, '... returning itself' );
 
 # this is used for a couple of tests
 sub foo { 'foo' }
@@ -37,31 +39,35 @@ is( $fooput, 'foo', '... which behaves normally' );
 is( $mock->can('foo'), \&foo, 'can() should return a subref' );
 
 can_ok( 'Test::MockObject', 'set_always' );
-$mock->set_always( 'bar', 'bar' );
+$result = $mock->set_always( 'bar', 'bar' );
 is( $mock->bar(), 'bar', 
 	'set_always() should add a sub that always returns its value' );
 is( $mock->bar(), 'bar', '... so it should at least do it twice in a row' );
+is( $result, $mock, '... returning itself' );
 
 can_ok( 'Test::MockObject', 'set_true' );
-$mock->set_true( 'blah' );
+$result = $mock->set_true( 'blah' );
 ok( $mock->blah(), 'set_true() should install a sub that returns true' );
 
 can_ok( 'Test::MockObject', 'set_false' );
-$mock->set_false( 'bloo' );
+$result = $mock->set_false( 'bloo' );
 ok( ! $mock->bloo(), 'set_false() should install a sub that returns false' );
 my @false = $mock->bloo();
 ok( ! @false, '... even in list context' );
+is( $result, $mock, '... and should return itself' );
 
 can_ok( 'Test::MockObject', 'set_list' );
-$mock->set_list( 'baz', ( 4 .. 6 ) );
+$result = $mock->set_list( 'baz', ( 4 .. 6 ) );
 is( scalar $mock->baz(), 3, 'set_list() should install a sub to return a list');
+is( $result, $mock, '... and should return itself' );
 is( join('-', $mock->baz()), '4-5-6',
 	'... and the sub should always return the list' );
 
 can_ok( 'Test::MockObject', 'set_series' );
-$mock->set_series( 'amicae', 'Sunny', 'Kylie', 'Isabella' );
+$result = $mock->set_series( 'amicae', 'Sunny', 'Kylie', 'Isabella' );
 is( $mock->amicae(), 'Sunny',
 	'set_series() should install a sub to return a series' );
+is( $result, $mock, '... and should return itself' );
 is( $mock->amicae(), 'Kylie', '... in order' );
 is( $mock->amicae(), 'Isabella', '... through the series' );
 ok( ! $mock->amicae(), '... but false when finishing the series' );
@@ -73,9 +79,10 @@ ok( $mock->called('foo'),
 ok( ! $mock->called('notfoo'), '... and false if it was not' );
 
 can_ok( 'Test::MockObject', 'clear' );
-$mock->clear();
+$result = $mock->clear();
 is( scalar @{ $mock->{_calls} }, 0,
 	'clear() should clear recorded call stack' );
+is( $result, $mock, '... and should return itself' );
 
 can_ok( 'Test::MockObject', 'call_pos' );
 $mock->foo(1, 2, 3);
@@ -145,8 +152,9 @@ is( Some::Module->new(), $mock,
 
 can_ok( 'Test::MockObject', 'set_bound' );
 $arg = 1;
-$mock->set_bound( 'bound', \$arg );
+$result = $mock->set_bound( 'bound', \$arg );
 is( $mock->bound(), 1, 'set_bound() should bind to a scalar reference' );
+is( $result, $mock, '... and should return itself' );
 $arg = 2;
 is( $mock->bound(), 2, '... and its return value should change with the ref' );
 $arg = [ 3, 5, 7 ];
@@ -179,7 +187,7 @@ isa_ok( $args, 'ARRAY', '... and args in a data structure which' );
 is( join('-', @$args), '1-2-3', '... containing the real arguments' );
 
 is( @{ $mock->{_calls} }, 2, '... and removing that call from the stack' );
-my $result = $mock->next_call( 2 );
+$result = $mock->next_call( 2 );
 is( @{ $mock->{_calls} }, 0,
 	'... and should skip multiple calls, with an argument provided' );
 is( $mock->next_call(), undef,
@@ -189,8 +197,9 @@ is( $result, 'baz', '... returning only the method name in scalar context' );
 # add()
 can_ok( $mock, 'add' );
 my $sub = sub {};
-$mock->add( 'added', $sub );
+$result = $mock->add( 'added', $sub );
 is( $mock->can( 'added' ), $sub, 'add() should still work' );
+is( $result, $mock, '... and should return itself' );
 $mock->{_subs}{add} = sub { return 'ghost' };
 is( $mock->add(), 'ghost',
 	'... should call mocked method add() if it exists' );

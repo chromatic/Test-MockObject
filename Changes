@@ -1,5 +1,9 @@
 Revision history for Perl extension Test::MockObject.
 
+0.09 Sun Jun 30 21:14:29 PDT 2002
+	- made most mocking methods return $self (Piers Cawley's suggestion)
+	- add $VERSION when mocking a module (ensure package is not empty)
+
 0.08 Wed Jun 26 03:38:45 UTC 2002
 	- pass $self to added add() methods (Ilya Martynov)
 	- test for same (Ilya again)

@@ -72,3 +72,9 @@ if (/(\w+)/) {
 is( $mock->call_args_pos( -1, 2 ), 'bar', 
 	'$1 should be preserved through AUTOLOAD invocation' );
 
+$mock->fake_module( 'fakemodule' );
+{
+	no strict 'refs';
+	ok( %{ 'fakemodule::' },
+		'fake_module() should create a symbol table entry for the module' );
+}

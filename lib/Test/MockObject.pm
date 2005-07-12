@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -17,6 +17,7 @@ sub mock {
 	my ($self, $name, $sub) = @_;
 	$sub ||= sub {};
 	$self->{_subs}{$name} = $sub;
+	$self;
 }
 
 # deprecated and complicated as of 0.07
@@ -77,6 +78,7 @@ sub can {
 sub remove {
 	my ($self, $sub) = @_;
 	delete $self->{_subs}{$sub};
+	$self;
 }
 
 sub called {
@@ -92,6 +94,7 @@ sub called {
 sub clear {
 	my $self = shift;
 	$self->{_calls} = [];
+	$self;
 }
 
 sub call_pos {
@@ -185,6 +188,8 @@ sub fake_module {
 
 	local $SIG{__WARN__} = sub { warn $_[0] unless $_[0] =~ /redefined/ };
 	no strict 'refs';
+	${ $modname . '::' }{VERSION} ||= -1;
+	
 	foreach my $sub (keys %subs) {
 		unless (UNIVERSAL::isa( $subs{ $sub }, 'CODE')) {
 			require Carp;
@@ -213,6 +218,10 @@ Test::MockObject - Perl extension for emulating troublesome interfaces
   my $mock = Test::MockObject->new();
   $mock->set_true( 'somemethod' );
   ok( $mock->somemethod() );
+
+  $mock->set_true( 'veritas')
+  	   ->set_false( 'ficta' )
+	   ->set_series( 'amicae', 'Sunny', 'Kylie', 'Bella' );
 
 =head1 DESCRIPTION
 
@@ -266,6 +275,10 @@ what was called, but which arguments were passed.  Please note that you cannot
 track non-mocked method calls.  They will still be allowed, though
 Test::MockObject will carp() about them.  This is considered a feature, though
 it may be possible to disable this in the future.
+
+As implied in the example above, it's possible to chain these calls together.
+Thanks to a suggestion from the fabulous Piers Cawley (CPAN RT #1249), this
+feature came about in version 0.09.  Shorter testing code is nice!k
 
 =over 4
 
