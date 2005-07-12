@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.13';
+$VERSION = '0.14';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -177,7 +177,7 @@ sub next_call
 
 sub AUTOLOAD
 {
-	my $self = $_[0];
+	my $self = shift;
 	my $sub;
 	{
 		local $1;
@@ -185,10 +185,18 @@ sub AUTOLOAD
 	}
 	return if $sub eq 'DESTROY';
 
+	$self->dispatch_mocked_method( $sub, @_ );
+}
+
+sub dispatch_mocked_method
+{
+	my $self = $_[0];
+	my $sub  = splice( @_, 1, 1 );
+
 	my $subs = _subs( $self );
 	if (exists $subs->{$sub})
 	{
-		push @{ _calls( $self ) }, [ $sub, [ @_ ] ];
+		$self->log_call( $sub, @_ );
 		goto &{ $subs->{$sub} };
 	}
 	else
@@ -197,6 +205,12 @@ sub AUTOLOAD
 		Carp::carp("Un-mocked method '$sub()' called");
 	}
 	return;
+}
+
+sub log_call
+{
+	my ($self, $sub) = splice( @_, 0, 2 );
+	push @{ _calls( $self ) }, [ $sub, [ @_ ] ];
 }
 
 sub called_ok
@@ -328,7 +342,7 @@ interface.  For example, if you're testing something that relies on CGI.pm, you
 may find it easier to create a mock object that returns controllable results
 at given times than to fake query string input.
 
-B<The Basics>
+=head3 The Basics
 
 =over 4
 
@@ -344,7 +358,7 @@ reference to bless that reference.
 
 =back
 
-B<Mocking>
+=head3 Mocking
 
 Your mock object is nearly useless if you don't tell it what it's mocking.
 This is done by installing methods.  You control the output of these mocked
@@ -413,8 +427,8 @@ import():
 
 =item * C<fake_new(I<module name>)>
 
-B<Note:> this method will likely be extracted into a separate module in the
-near future.
+B<Note:> see L<Test::MockObject::Extends> for a better alternative to this
+method.
 
 Provides a fake constructor for the given module that returns the invoking mock
 object.  Used in conjunction with C<fake_module()>, you can force the tested
@@ -467,7 +481,7 @@ Removes a named method.
 
 =back
 
-B<Checking Your Mocks>
+=head3 Checking Your Mocks
 
 =over 4
 
@@ -614,15 +628,24 @@ by default.  You can probably do much better.
 
 =back
 
+=head3 Subclassing
+
+If you want to subclass this module to override any behavior, see
+C<dispatch_mocked_method>.  This module uses this method to determine how to
+call a method not available in this class.  It also controls logging.  You may
+or may not find it useful, but I certainly take advantage of it for
+Test::MockObject::Extends.
+
 =head1 TODO
 
 =over 4
 
 =item * Add a factory method to avoid namespace collisions (soon)
 
-=item * Handle C<isa()>
+=item * Handle C<isa()> -- done in Test::MockObject::Extends
 
-=item * Make C<fake_module()> and C<fake_new()> undoable
+=item * Make C<fake_module()> and C<fake_new()> undoable -- done in
+Test::MockObject::Extends
 
 =item * Add more useful methods (catch C<import()>?)
 
@@ -642,7 +665,8 @@ finding several bugs and providing several constructive suggestions.
 Jay Bonci also found a false positive in C<called_ok()>.  Thanks!
 
 Chris Winters was the first to report I'd accidentally scheduled 0.12 for
-deletion without uploading a newver version.
+deletion without uploading a newer version.  He also gave useful feedback on
+Test::MockObject::Extends.
 
 =head1 SEE ALSO
 
@@ -651,7 +675,7 @@ L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2001E<sol>12E<sol>04E<sol>t
 
 =head1 COPYRIGHT
 
-Copyright 2002 - 2003 by chromatic E<lt>chromatic@wgz.orgE<gt>.
+Copyright 2002 - 2004 by chromatic E<lt>chromatic@wgz.orgE<gt>.
 
 This program is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself.

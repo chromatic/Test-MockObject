@@ -1,7 +1,10 @@
-Test/MockObject version 0.13
-============================
+Test::MockObject version 0.14
+=============================
 
 * NOTES *
+
+I've added Test::MockObject::Extends in version 0.14.  This required making
+Test::MockObject a little more subclassable.
 
 As of version 0.12, I've fixed the false positives in called_ok().  Jay Bonci
 found this one and wrote the test case.  Oops.
@@ -34,7 +37,7 @@ INSTALLATION
 
 To install this module type the following:
 
-   perl Makefile.PL
+   perl Build.PL
    make
    make test
    make install
@@ -47,6 +50,6 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Copyright (c) 2002 - 2003 chromatic. All rights reserved.  This program is free
+Copyright (c) 2002 - 2004 chromatic. All rights reserved.  This program is free
 software; you can redistribute it and/or modify it under the same terms as Perl
 itself.
