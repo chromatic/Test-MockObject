@@ -3,7 +3,7 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 use Test::Builder;
 my $Test = Test::Builder->new();
@@ -42,6 +42,19 @@ sub set_list {
 sub set_series {
 	my ($self, $name, @list) = @_;
 	$self->add( $name, sub { shift @list } );
+}
+
+sub set_bound {
+	my ($self, $name, $ref) = @_;
+	my $code;
+	if (UNIVERSAL::isa( $ref, 'SCALAR' )) {
+		$code = sub { $$ref };
+	} elsif (UNIVERSAL::isa( $ref, 'ARRAY' )) {
+		$code = sub { @$ref };
+	} elsif (UNIVERSAL::isa( $ref, 'HASH' )) {
+		$code = sub { %$ref };
+	}
+	$self->add( $name, $code );
 }
 
 sub can {
@@ -99,7 +112,7 @@ sub call_args_pos {
 }
 
 sub AUTOLOAD {
-	my $self = shift;
+	my $self = $_[0];
 	my ($sub) = $AUTOLOAD =~ /::(\w+)\z/;
 	return if $sub eq 'DESTROY';
 
@@ -135,9 +148,19 @@ sub called_args_pos_is {
 }
 
 sub fake_module {
-	my ($class, $modname) = @_;
+	my ($class, $modname, %subs) = @_;
 	$modname =~ s!::!/!g;
-	$ENV{ $modname . '.pm' } = 1;
+	$INC{ $modname . '.pm' } = 1;
+
+	no strict 'refs';
+	foreach my $sub (keys %subs) {
+		unless (UNIVERSAL::isa( $subs{ $sub }, 'CODE')) {
+			require Carp;
+			Carp::carp("'$sub' is not a code reference" );
+			next;
+		}
+		*{ $_[1] . '::' . $sub } = $subs{ $sub };
+	}
 }
 
 sub fake_new {
@@ -230,9 +253,15 @@ to provide a list and not an array, if that's important to you.
 =item * C<set_series(I<name>, [ I<item1>, I<item2>, ... ]>
 
 Adds a method that will return the next item in a series on each call.  This
-cam be an effective way to test error handling, by forcing a failure on the
+can be an effective way to test error handling, by forcing a failure on the
 first method call and then subsequent successes.  Note that the series is
 (eventually) destroyed.
+
+=item * C<set_bound(I<name>, I<reference>)>
+
+Adds a method bound to a variable.  Pass in a reference to a variable in your
+test.  When you change the variable, the return value of the new method will
+change as well.  This is often handier than replacing mock methods.
 
 =item * C<remove(I<name>)>
 
@@ -290,7 +319,7 @@ no separator is given, they will not be separated.  This can be used as:
 	is( $mock->call_args_string(1), "$mock initialize",
 		'... passing object and initialize as its arguments' );
 
-=item * C<fake_module(I<module name>)>
+=item * C<fake_module(I<module name>), [ I<subname> => I<coderef>, ... ]
 
 Lies to Perl that a named module has already been loaded.  This is handy when
 providing a mockup of a real module if you'd like to prevent the actual module
@@ -303,6 +332,16 @@ This can be invoked both as a class and as an object method.  Beware that this
 must take place before the actual module has a chance to load.  Either wrap it
 in a BEGIN block before a use or require, or place it before a C<use_ok()> or
 C<require_ok()> call.
+
+You can optionally add functions to the mocked module by passing them as name
+=> coderef pairs to C<fake_module()>.  This is handy if you want to test an
+import():
+
+	my $import;
+	$mock->fake_module( 'Regexp::English', import => sub { $import = caller } );
+	use_ok( 'Regexp::Esperanto' );
+	is( $import, 'Regexp::Esperanto',
+		'Regexp::Esperanto should use() Regexp::English' );
 
 =item * C<fake_new(I<module name>)>
 

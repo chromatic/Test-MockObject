@@ -1,5 +1,19 @@
 Revision history for Perl extension Test::MockObject.
 
+0.05  Sun Jun  9 21:16:41 PDT 2002
+	- fixed tests for object passing
+	- added set_bound()
+	- removed fake_import() (retcon!) and modified fake_module() to be general
+	  enough to do the same sort of thing
+
+	  Fri Jun  7 23:15:41 PDT 2002
+	- fix typo in documentation
+	- pass along object to method calls (bugfix)
+	
+	  Mon May 27 20:31:35 UTC 2002
+	- fix fake_module(), which never worked.  Oops, bug in both test and module!
+	- added fake_import() and its tests
+
 0.04  Mon Apr 29 01:03:36 UTC 2002
 	- pass tests in 5.005_03 (Tatsuhiko Miyagawa)
 	- can() should return subref instead of just 1 (also Tatsuhiko)

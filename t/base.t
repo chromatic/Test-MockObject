@@ -7,7 +7,7 @@ BEGIN {
 	unshift @INC, '../lib';
 }
 
-use Test::More tests => 54;
+use Test::More tests => 62;
 use_ok( 'Test::MockObject' );
 
 # new()
@@ -86,14 +86,16 @@ is( $mock->call_pos(1), 'foo',
 is( $mock->call_pos(-1), 'baz', '... and should handle negative numbers' );
 
 can_ok( 'Test::MockObject', 'call_args' );
-my ($arrref) = $mock->call_args(2);
-is( $arrref->[ 0 ], 'foo',
+my ($arg) = ($mock->call_args(2))[1];
+is( $arg->[0], 'foo',
 	'call_args() should return args for sub called by position' );
+is( ($mock->call_args(2))[0], $mock,
+	'... with the object as the first argument' );
 
 can_ok( 'Test::MockObject', 'call_args_string' );
-is( $mock->call_args_string(1, '-'), '1-2-3',
+is( $mock->call_args_string(1, '-'), "$mock-1-2-3",
 	'call_args_string() should return args joined' );
-is( $mock->call_args_string(1), '123', '... with no default separator' );
+is( $mock->call_args_string(1), "${mock}123", '... with no default separator' );
 
 can_ok( 'Test::MockObject', 'call_args_pos' );
 is( $mock->call_args_pos(3, 1), $mock,
@@ -108,17 +110,46 @@ can_ok( 'Test::MockObject', 'called_pos_ok' );
 $mock->called_pos_ok( 1, 'foo' );
 
 can_ok( 'Test::MockObject', 'called_args_string_is' );
-$mock->called_args_string_is( 1, '-', '1-2-3' );
+$mock->called_args_string_is( 1, '-', "$mock-1-2-3" );
 
 can_ok( 'Test::MockObject', 'called_args_pos_is' );
 $mock->called_args_pos_is( 1, -1, 3 );
 
 can_ok( 'Test::MockObject', 'fake_module' );
 $mock->fake_module( 'Some::Module' );
-is( $ENV{'Some/Module.pm'}, 1, 
+is( $INC{'Some/Module.pm'}, 1, 
 	'fake_module() should prevent a module from being loaded' );
+
+my @imported;
+$mock->fake_module( 'import::me', import => sub { push @imported, $_[0] });
+eval { import::me->import() };
+is( $imported[0], 'import::me',
+	'fake_module() should install functions in new package namespace' );
+{
+	my $warn;
+	local $SIG{__WARN__} = sub {
+		$warn = shift;
+	};
+
+	$mock->fake_module( 'badimport', foo => 'bar' );
+	like( $warn, qr/'foo' is not a code reference/,
+		'... and should carp if it does not receive a function reference' );
+}
 
 can_ok( 'Test::MockObject', 'fake_new' );
 $mock->fake_new( 'Some::Module' );
 is( Some::Module->new(), $mock, 
 	'fake_new() should create a fake constructor to return mock object' );
+
+can_ok( 'Test::MockObject', 'set_bound' );
+$arg = 1;
+$mock->set_bound( 'bound', \$arg );
+is( $mock->bound(), 1, 'set_bound() should bind to a scalar reference' );
+$arg = 2;
+is( $mock->bound(), 2, '... and its return value should change with the ref' );
+$arg = [ 3, 5, 7 ];
+$mock->set_bound( 'bound_array', $arg );
+is( join('-', $mock->bound_array()), '3-5-7', '... handling array refs' );
+$arg = { foo => 'bar' };
+$mock->set_bound( 'bound_hash', $arg );
+is( join('-', $mock->bound_hash()), 'foo-bar', '... and hash refs' );
