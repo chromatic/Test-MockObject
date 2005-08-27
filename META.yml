@@ -1,18 +1,22 @@
 ---
 name: Test-MockObject
-version: 1.00
+version: 1.01
 author: ~
 abstract: Perl extension for emulating troublesome interfaces
 license: perl
 requires:
   Scalar::Util: ''
   Test::Simple: 0.47
+  UNIVERSAL::can: 1.00
+  UNIVERSAL::isa: 0.02
+build_requires:
+  Test::Exception: ''
   Test::Warn: ''
 provides:
   Test::MockObject:
     file: lib/Test/MockObject.pm
-    version: 1.00
+    version: 1.01
   Test::MockObject::Extends:
     file: lib/Test/MockObject/Extends.pm
-    version: 1.00
+    version: 1.01
 generated_by: Module::Build version 0.2611

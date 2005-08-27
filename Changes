@@ -1,5 +1,12 @@
 Revision history for Perl extension Test::MockObject.
 
+1.01
+	Sat Aug 27 03:36:39 UTC 2005 (chromatic)
+	- set $AUTOLOAD in parent AUTOLOAD(), if delegating (RT #14251)
+	- don't require parent module if it has a new() method
+	- use UNIVERSAL::isa and UNIVERSAL::can modules
+	- give the installed isa() and can() methods the appropriate names in T::MO
+
 1.00 
 	Tue Jul 12 01:49:06 UTC 2005 (chromatic)
 	- removed deprecated Test::MockObject::add()

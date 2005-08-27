@@ -3,9 +3,12 @@ package Test::MockObject;
 use strict;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.00';
+$VERSION = '1.01';
 
 use Scalar::Util qw( blessed refaddr reftype );
+use UNIVERSAL::isa;
+use UNIVERSAL::can;
+
 use Test::Builder;
 
 my $Test = Test::Builder->new();
@@ -107,11 +110,12 @@ BEGIN
 		*{ $universal->{name} } = sub
 		{
 			my ($self, $sub) = @_; 
+			local *__ANON__  = $universal->{name};
 
 			# mockmethods are special cases, class methods are handled directly
 			my $lookup = $universal->{sub}->( $self );
 			return $lookup->{$sub} if blessed $self and exists $lookup->{$sub};
-			return $universal->{parent}->( @_);
+			return $universal->{parent}->( @_ );
 		};
 	}
 }

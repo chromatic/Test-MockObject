@@ -6,7 +6,7 @@ use Test::MockObject;
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.00';
+$VERSION = '1.01';
 
 sub new
 {
@@ -15,8 +15,11 @@ sub new
 	return Test::MockObject->new() unless defined $fake_class;
 
 	my $parent_class = $class->get_class( $fake_class );
-	(my $load_class  = $parent_class) =~ s/::/\//g;
-	require $load_class . '.pm';
+	unless ($parent_class->can( 'new' ))
+	{
+		(my $load_class  = $parent_class) =~ s/::/\//g;
+		require $load_class . '.pm';
+	}
 	my $self         = blessed( $fake_class ) ? $fake_class : {};
 
 	bless $self, $class->gen_package( $parent_class );
@@ -94,6 +97,11 @@ sub gen_autoload
 		}
 		elsif (my $parent_al = $parent->can( 'AUTOLOAD' ))
 		{
+			my $parent_pack  = blessed( $parent ) || $parent;
+			{
+				no strict 'refs';
+				${ "${parent_pack}::AUTOLOAD" } = "${parent_pack}::${method}";
+			}
 			unshift @_, $self;
 			goto &$parent_al;
 		}

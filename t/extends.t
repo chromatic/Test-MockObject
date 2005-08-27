@@ -7,8 +7,10 @@ BEGIN
 }
 
 use strict;
-use Test::More tests => 20;
+
+use Test::More tests => 30;
 use Test::Warn;
+use Test::Exception;
 
 my $module = 'Test::MockObject::Extends';
 use_ok( $module ) or exit;
@@ -109,3 +111,54 @@ my $extend = Test::MockObject::Extends->new( $parent );
 $extend->mock( 'mockthis', sub { return 'foo' } );
 is( $extend->foo(), 'foo', 'Mocking worked' );
 ok( ! $Parent::somethingnasty, "Method didn't trigger bad method" );
+
+package Foo;
+
+my ($called_foo, $called_autoload, $method_name);
+
+use vars '$AUTOLOAD';
+
+BEGIN
+{
+	$called_foo      = 0;
+	$called_autoload = 0;
+	$method_name     = '';
+}
+
+sub new
+{
+	bless {}, $_[0];
+}
+
+sub foo
+{
+	$called_foo++;
+	return 'foo';
+}
+
+sub AUTOLOAD
+{
+	$called_autoload++;
+	$method_name = $Foo::AUTOLOAD;
+	return 'autoload';
+}
+
+package main;
+
+my $object = Foo->new();
+isa_ok( $object, 'Foo' );
+
+my $mock;
+lives_ok { $mock = Test::MockObject::Extends->new( $object ) };
+isa_ok( $mock, 'Foo'   );
+
+# Call foo()
+is( $mock->foo(),     'foo', 'foo() should return as expected' );
+is( $called_foo,          1, '... calling the method'          );
+is( $called_autoload,     0, '... not touching AUTOLOAD()'     );
+is( $Foo::AUTOLOAD,   undef, '... or $Foo::AUTOLOAD'           );
+
+# Call an autoloaded method
+is( $mock->bar(),     'autoload', 'bad() should returns as expected'        );
+is( $called_autoload,          1, '... calling AUTOLOAD()'                  );
+is( $method_name,     'Foo::bar', '... with the appropriate $Foo::AUTOLOAD' );
