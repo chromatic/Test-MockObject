@@ -6,6 +6,7 @@ my $build = Module::Build->new(
 	sign        => 1,
 	requires    =>
 	{
+		'perl'            => '5.6.0',
 		'Scalar::Util'    =>     '',
 		'Test::Simple'    => '0.47',
 		'UNIVERSAL::isa'  => '0.02',

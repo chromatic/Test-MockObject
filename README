@@ -1,7 +1,12 @@
-Test::MockObject version 1.00
+Test::MockObject version 1.02
 =============================
 
 * NOTES *
+
+Because you can break this module very badly by using the isa() and can()
+methods as if they were functions, version 1.01 uses the UNIVERSAL::isa and
+UNIVERSAL::can modules.  They'll do the right thing but complain about it so
+that you can fix the offending code.  These require Perl 5.6.0 or better.
 
 I removed T::MO::add() as of version 1.0.  I deprecated it a long, long time
 ago.  Also, T::MO::E should handle a few more types of extending now, but

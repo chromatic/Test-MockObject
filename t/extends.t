@@ -1,12 +1,7 @@
-#!/usr/bin/perl -w
-
-BEGIN
-{
-	chdir 't' if -d 't';
-	use lib '../lib';
-}
+#!/usr/bin/perl
 
 use strict;
+use warnings;
 
 use Test::More tests => 30;
 use Test::Warn;
@@ -87,9 +82,10 @@ is( $tme->foo(), 11, 'unlogged methods should work' );
 ok( ! $tme->called( 'foo' ), '... and logging should not happen for them' );
 
 warning_is { $tme->set_always( foo => 12 ) } undef, 
-	'... not throwing redefinition warnings';
-is( $tme->foo(), 12,       '... allowing overriding with logged versions' );
-ok( $tme->called( 'foo' ), '... with logging happening then, obviously'   );
+	                         '... not throwing redefinition warnings';
+$tme->set_always( foo => 12 );
+is( $tme->foo(), 12,         '... allowing overriding with logged versions' );
+ok( $tme->called( 'foo' ),   '... with logging happening then, obviously'   );
 
 package Parent;
 

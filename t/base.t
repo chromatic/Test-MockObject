@@ -1,12 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
-
-BEGIN
-{
-	chdir 't' if -d 't';
-	use lib '../lib';
-}
+use warnings;
 
 my $package = 'Test::MockObject';
 use Test::More 'no_plan'; # tests => 93;

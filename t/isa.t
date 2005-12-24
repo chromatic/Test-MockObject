@@ -1,12 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use strict;
-
-BEGIN
-{
-	chdir 't' if -d 't';
-	use lib '../lib';
-}
+use warnings;
 
 use Test::More tests => 7;
 

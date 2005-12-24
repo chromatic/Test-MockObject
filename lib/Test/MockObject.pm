@@ -1,9 +1,10 @@
 package Test::MockObject;
 
 use strict;
+use warnings;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 use Scalar::Util qw( blessed refaddr reftype );
 use UNIVERSAL::isa;
@@ -102,10 +103,8 @@ BEGIN
 {
 	no strict 'refs';
 
-	for my $universal (
-		{ sub => \&_subs, name => 'can', parent => \&UNIVERSAL::can },
-		{ sub => \&_isas, name => 'isa', parent => \&UNIVERSAL::isa },
-	)
+	for my $universal
+	( { sub => \&_subs, name => 'can' }, { sub => \&_isas, name => 'isa' } )
 	{
 		*{ $universal->{name} } = sub
 		{
@@ -115,7 +114,8 @@ BEGIN
 			# mockmethods are special cases, class methods are handled directly
 			my $lookup = $universal->{sub}->( $self );
 			return $lookup->{$sub} if blessed $self and exists $lookup->{$sub};
-			return $universal->{parent}->( @_ );
+			my $parent = 'SUPER::' . $universal->{name};
+			return $self->$parent( $sub );
 		};
 	}
 }

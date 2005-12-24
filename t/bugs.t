@@ -1,12 +1,8 @@
-#!/usr/bin/perl -w
-
-BEGIN
-{
-	chdir 't' if -d 't';
-	use lib '../lib', '../blib/lib';
-}
+#!/usr/bin/perl
 
 use strict;
+use warnings;
+
 use Test::More tests => 14;
 
 use Test::MockObject;
@@ -35,7 +31,7 @@ my $mock = Test::MockObject->new();
 	is( $warn, '', 'fake_module() should catch redefined sub warnings' );
 }
 
-my ($ok, $warn, @diag);
+my ($ok, $warn, @diag) = ('') x 2;
 {
 	local (*Test::Builder::ok, *Test::Builder::diag);
 	*Test::Builder::ok = sub {

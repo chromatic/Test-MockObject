@@ -1,5 +1,14 @@
 Revision history for Perl extension Test::MockObject.
 
+1.02
+	Sat Dec 24 08:36:07 UTC 2005 (chromatic)
+	- avoid warnings in UNIVERSAL::isa and UNIVERSAL::can by always calling
+	  both as methods (oops)
+	- mark dependency on Perl 5.6.0
+	- skip signature check without SIGNATURE file
+	- remove chdir/library logic from tests and add warnings
+	- clean up warnings in t/bugs.t
+
 1.01
 	Sat Aug 27 03:36:39 UTC 2005 (chromatic)
 	- set $AUTOLOAD in parent AUTOLOAD(), if delegating (RT #14251)

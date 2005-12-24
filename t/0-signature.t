@@ -6,6 +6,7 @@ use strict;
 use Test::More tests => 1;
 
 SKIP: {
+    skip( 'No signature!', 1 ) unless -e 'SIGNATURE';
     if (eval { require Module::Signature; 1 }) {
 	ok(Module::Signature::verify() == Module::Signature::SIGNATURE_OK()
 	    => "Valid signature" );
