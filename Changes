@@ -8,6 +8,7 @@ Revision history for Perl extension Test::MockObject.
 	- skip signature check without SIGNATURE file
 	- remove chdir/library logic from tests and add warnings
 	- clean up warnings in t/bugs.t
+	- made Test::MockObject::Extends warnings clean
 
 1.01
 	Sat Aug 27 03:36:39 UTC 2005 (chromatic)

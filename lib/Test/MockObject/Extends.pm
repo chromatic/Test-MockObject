@@ -1,6 +1,7 @@
 package Test::MockObject::Extends;
 
 use strict;
+use warnings;
 
 use Test::MockObject;
 use Scalar::Util 'blessed';
@@ -114,15 +115,19 @@ sub mock
 
 	Test::MockObject::_set_log( $self, $name, ( $name =~ s/^-// ? 0 : 1 ) );
 
-	no strict 'refs';
-	local $^W;
-
-	*{ ref( $self ) . '::' . $name } = sub 
+	my $mock_sub = sub 
 	{
 		my ($self) = @_;
 		$self->log_call( $name, @_ );
 		$sub->( @_ );
 	};
+	
+	{
+		no strict 'refs';
+		no warnings 'redefine';
+		*{ ref( $self ) . '::' . $name } = $mock_sub;
+	}
+
 }
 
 sub unmock
