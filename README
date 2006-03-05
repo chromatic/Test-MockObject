@@ -1,4 +1,4 @@
-Test::MockObject version 1.02
+Test::MockObject version 1.03
 =============================
 
 * NOTES *
@@ -65,9 +65,10 @@ This module requires these other modules and libraries:
 
 	Test::Simple version 0.44 or newer (I fixed a bug :)
 	Scalar::Util, without which you have a broken Perl installation
+	UNIVERSAL::isa and UNIVERSAL::can (always the latest versions)
 
 COPYRIGHT AND LICENCE
 
-Copyright (c) 2002 - 2005 chromatic. All rights reserved.  This program is free
+Copyright (c) 2002 - 2006 chromatic. All rights reserved.  This program is free
 software; you can redistribute it and/or modify it under the same terms as Perl
 itself.

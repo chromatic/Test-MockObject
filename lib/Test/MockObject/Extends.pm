@@ -7,7 +7,7 @@ use Test::MockObject;
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.01';
+$VERSION = '1.03';
 
 sub new
 {
@@ -16,14 +16,35 @@ sub new
 	return Test::MockObject->new() unless defined $fake_class;
 
 	my $parent_class = $class->get_class( $fake_class );
-	unless ($parent_class->can( 'new' ))
+	$class->check_class_loaded( $parent_class );
+	my $self         = blessed( $fake_class ) ? $fake_class : {};
+
+	bless $self, $class->gen_package( $parent_class );
+}
+
+sub check_class_loaded
+{
+	my ($self, $parent_class) = @_;
+
+	my $symtable = \%main::;
+	my $found    = 1;
+
+	for my $symbol ( split( '::', $parent_class ))
+	{
+		unless (exists $symtable->{ $symbol . '::' })
+		{
+			$found = 0;
+			last;
+		}
+		
+		$symbol = $symtable->{ $symbol . '::' };
+	}
+
+	unless ($found)
 	{
 		(my $load_class  = $parent_class) =~ s/::/\//g;
 		require $load_class . '.pm';
 	}
-	my $self         = blessed( $fake_class ) ? $fake_class : {};
-
-	bless $self, $class->gen_package( $parent_class );
 }
 
 sub get_class
@@ -261,5 +282,5 @@ No known bugs.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 - 2005, chromatic.  All rights reserved.  You may use,
+Copyright (c) 2004 - 2006, chromatic.  All rights reserved.  You may use,
 modify, and distribute this module under the same terms as Perl 5.8.x.

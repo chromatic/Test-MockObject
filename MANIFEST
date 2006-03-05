@@ -9,6 +9,7 @@ t/0-signature.t
 t/base.t
 t/bugs.t
 t/extends.t
+t/extends-bugs.t
 t/isa.t
 t/ignore.t
 t/pod.t
