@@ -173,10 +173,13 @@ Test::MockObject::Extends - mock part of an object or class
   use Some::Class;
   use Test::MockObject::Extends;
 
+  # create an object to mock
   my $object      = Some::Class->new();
-  my $mock_object = Test::MockObject::Extends->new( $object );
 
-  $mock_object->set_true( 'parent_method' );
+  # wrap that same object with a mocking wrapper
+  $object         = Test::MockObject::Extends->new( $object );
+
+  $object->set_true( 'parent_method' );
 
 =head1 DESCRIPTION
 
@@ -194,7 +197,8 @@ can.
 
 C<new()> takes one optional argument, the object or class to mock.  If you're
 mocking a method for an object that holds internal state, create an appropriate
-object, then pass it to this constructor.
+object, then pass it to this constructor.  B<NOTE:> this will modify the object
+in place.
 
 If you're mocking an object that does not need state, as in the cases where
 there's no internal data or you'll only be calling class methods, or where
