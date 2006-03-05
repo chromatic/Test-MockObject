@@ -6,7 +6,7 @@ use warnings;
 use vars qw( $VERSION $AUTOLOAD );
 $VERSION = '1.03';
 
-use Scalar::Util qw( blessed refaddr reftype );
+use Scalar::Util qw( blessed refaddr reftype weaken );
 use UNIVERSAL::isa;
 use UNIVERSAL::can;
 
@@ -224,10 +224,17 @@ sub dispatch_mocked_method
 
 sub log_call
 {
-	my ($self, $sub) = splice( @_, 0, 2 );
-
+	my ($self, $sub, @call_args) = @_;
 	return unless _logs( $self, $sub );
-	push @{ _calls( $self ) }, [ $sub, [ @_ ] ];
+
+	# prevent circular references with weaken
+	for my $arg ( @call_args )
+	{
+		next unless ref $arg;
+		weaken( $arg ) if refaddr( $arg ) eq refaddr( $self );
+	}		
+
+	push @{ _calls( $self ) }, [ $sub, \@call_args ];
 }
 
 sub called_ok
@@ -293,6 +300,15 @@ sub fake_new
 	$self->fake_module( $class, new => sub { $self } );
 }
 
+sub DESTROY
+{
+	my $self = shift;
+	$self->_clear_calls();
+	$self->_clear_subs();
+	$self->_clear_logs();
+	$self->_clear_isas();
+}
+
 sub _get_key
 {
 	my $invocant = shift;
@@ -306,6 +322,11 @@ sub _get_key
 	{
 		$calls{ _get_key( shift ) } ||= [];
 	}
+
+	sub _clear_calls
+	{
+		delete $calls{ _get_key( shift ) };
+	}
 }
 
 {
@@ -314,6 +335,11 @@ sub _get_key
 	sub _subs
 	{
 		$subs{ _get_key( shift ) } ||= {};
+	}
+
+	sub _clear_subs
+	{
+		delete $subs{ _get_key( shift ) };
 	}
 }
 
@@ -343,6 +369,11 @@ sub _get_key
 		my ($name) = @_;
 		return exists $logs{$key}{$name};
 	}
+
+	sub _clear_logs
+	{
+		delete $logs{ _get_key( shift ) };
+	}
 }
 
 {
@@ -351,6 +382,11 @@ sub _get_key
 	sub _isas
 	{
 		$isas{ _get_key( shift ) } ||= {};
+	}
+
+	sub _clear_isas
+	{
+		delete $isas{ _get_key( shift ) };
 	}
 }
 

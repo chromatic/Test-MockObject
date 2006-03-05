@@ -2,8 +2,9 @@
 
 use strict;
 use warnings;
+use Scalar::Util qw(weaken);
 
-use Test::More tests => 14;
+use Test::More tests => 17;
 
 use Test::MockObject;
 my $mock = Test::MockObject->new();
@@ -114,3 +115,32 @@ is( "$o", 'default',  'default overloadings should work' );
 $id = 'my id';
 is( "$o", 'my id',    '... and not be static' );
 is( $o->foo(), 'foo', '... but should not interfere with method finding' );
+
+# no overload '""';
+
+# David Pisoni found memory leak condition
+{
+	# Setup MOs with 2 references
+	my ($obj1, $obj2, $obj1prime, $obj2prime);
+	$obj1 = $obj1prime = Test::MockObject->new();
+	$obj2 = $obj2prime = Test::MockObject->new();
+
+	# Weaken one of the references each
+	weaken $obj1prime;
+	weaken $obj2prime;
+
+	# test for memory leak condition
+	$obj1->set_true('this');
+	$obj1->this($obj2);
+
+	undef $obj2;
+
+	is( ref($obj2prime), 'Test::MockObject',
+		'MO cached by another MO log should not be garbage collected' );
+	undef $obj1;
+
+	ok( !ref($obj2prime), '... but should go away when caching MO does' );
+
+	ok( !ref($obj1prime),
+		'... and the caching MO better go away too!' );
+}

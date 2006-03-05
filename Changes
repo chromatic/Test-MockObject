@@ -10,6 +10,8 @@ Revision history for Perl extension Test::MockObject.
 	- cleaned up some extraneous whitespace
 	- allowed isa() to check reference type of mocked object once again (RT
 	  #15446 from PM)
+	- avoid circular references preventing mock destruction (RT #17941 from
+	  David Pisoni)
 
 1.02
 	Sat Dec 24 08:36:07 UTC 2005 (chromatic)
