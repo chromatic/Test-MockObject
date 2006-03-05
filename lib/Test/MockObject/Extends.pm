@@ -4,6 +4,8 @@ use strict;
 use warnings;
 
 use Test::MockObject;
+
+use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
@@ -122,10 +124,10 @@ sub gen_autoload
 		}
 		elsif (my $parent_al = $parent->can( 'AUTOLOAD' ))
 		{
-			my $parent_pack  = blessed( $parent ) || $parent;
+			my ($parent_pack) = CvGV( $parent_al ) =~ /\*(.*)::AUTOLOAD/;
 			{
 				no strict 'refs';
-				${ "${parent_pack}::AUTOLOAD" } = "${parent_pack}::${method}";
+				${ "${parent_pack}::AUTOLOAD" } = "${parent}::${method}";
 			}
 			unshift @_, $self;
 			goto &$parent_al;

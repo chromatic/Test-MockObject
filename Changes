@@ -1,7 +1,7 @@
 Revision history for Perl extension Test::MockObject.
 
 1.03
-	Sun Mar  5 00:37:01 UTC 2006 (chromatic)
+	Sun Mar  5 01:43:20 UTC 2006 (chromatic)
 	- removed test dependency on Test::Warn
 	- improved signature test
 	- improved mock package loading in T::MO::E (RT #17692 from Badgersrc)
@@ -12,6 +12,8 @@ Revision history for Perl extension Test::MockObject.
 	  #15446 from PM)
 	- avoid circular references preventing mock destruction (RT #17941 from
 	  David Pisoni)
+	- fixed inherited AUTOLOAD() calls from T::MO::E (RT #14445 from Adam
+	  Kennedy)
 
 1.02
 	Sat Dec 24 08:36:07 UTC 2005 (chromatic)

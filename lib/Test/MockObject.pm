@@ -219,6 +219,7 @@ sub dispatch_mocked_method
 		require Carp;
 		Carp::carp("Un-mocked method '$sub()' called");
 	}
+
 	return;
 }
 
