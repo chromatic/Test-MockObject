@@ -36,7 +36,7 @@ sub check_class_loaded
 			$found = 0;
 			last;
 		}
-		
+
 		$symbol = $symtable->{ $symbol . '::' };
 	}
 
@@ -76,12 +76,14 @@ sub gen_package
 sub gen_isa
 {
 	my ($class, $parent)    = @_;
-	
+
 	sub
 	{
+		local *__ANON__    = 'isa';
 		my ($self, $class) = @_;
 		return 1 if $class eq $parent;
-		return $parent->isa( $class );
+		my $isa = $parent->can( 'isa' );
+		return $isa->( $self, $class );
 	};
 }
 
@@ -91,6 +93,7 @@ sub gen_can
 
 	sub
 	{
+		local *__ANON__     = 'can';
 		my ($self, $method) = @_;
 		my $parent_method   = $self->SUPER::can( $method );
 		return $parent_method if $parent_method;
@@ -142,13 +145,12 @@ sub mock
 		$self->log_call( $name, @_ );
 		$sub->( @_ );
 	};
-	
+
 	{
 		no strict 'refs';
 		no warnings 'redefine';
 		*{ ref( $self ) . '::' . $name } = $mock_sub;
 	}
-
 }
 
 sub unmock
@@ -234,6 +236,11 @@ mocking.
 To do its magic, this module uses several internal methods:
 
 =over 4
+
+=item * C<check_class_loaded( $parent_class )>
+
+This verifies that you have the mockee defined.  If not, it attempts to load
+the corresponding module for you.
 
 =item * C<gen_autoload( $extended )>
 

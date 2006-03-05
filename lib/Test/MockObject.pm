@@ -130,7 +130,7 @@ sub remove
 sub called
 {
 	my ($self, $sub) = @_;
-	
+
 	for my $called (reverse @{ _calls( $self ) }) {
 		return 1 if $called->[0] eq $sub;
 	}
@@ -273,7 +273,7 @@ sub fake_module
 	local $SIG{__WARN__} = sub { $warn->( $_[0] ) unless $_[0] =~ /redefined/ };
 	no strict 'refs';
 	${ $modname . '::' }{VERSION} ||= -1;
-	
+
 	for my $sub (keys %subs)
 	{
 		my $type = reftype( $subs{ $sub } ) || '';

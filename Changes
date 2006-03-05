@@ -5,6 +5,11 @@ Revision history for Perl extension Test::MockObject.
 	- removed test dependency on Test::Warn
 	- improved signature test
 	- improved mock package loading in T::MO::E (RT #17692 from Badgersrc)
+	- clarified T::MO::E object wrapping behavior (RT #17929 from Larry Clapp)
+	- named generated can() and isa() methods in T::MO::E
+	- cleaned up some extraneous whitespace
+	- allowed isa() to check reference type of mocked object once again (RT
+	  #15446 from PM)
 
 1.02
 	Sat Dec 24 08:36:07 UTC 2005 (chromatic)
