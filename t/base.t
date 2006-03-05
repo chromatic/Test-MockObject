@@ -4,8 +4,7 @@ use strict;
 use warnings;
 
 my $package = 'Test::MockObject';
-use Test::More 'no_plan'; # tests => 93;
-use Test::Warn;
+use Test::More tests => 94;
 use_ok( $package );
 
 # new()
@@ -142,9 +141,13 @@ eval { import::me->import() };
 is( $imported[0], 'import::me',
 	'fake_module() should install functions in new package namespace' );
 
-warning_like { $mock->fake_module( 'badimport', foo => 'bar' ) }
-	qr/'foo' is not a code reference/,
-	'... and should carp if it does not receive a function reference';
+{
+	my $warnings = '';
+	local $SIG{__WARN__} = sub { $warnings .= shift };
+	$mock->fake_module( 'badimport', foo => 'bar' );
+	like( $warnings, qr/'foo' is not a code reference/,
+	    '... and should carp if it does not receive a function reference' );
+}
 
 can_ok( $package, 'fake_new' );
 $mock->fake_new( 'Some::Module' );

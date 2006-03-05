@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More tests => 30;
-use Test::Warn;
 use Test::Exception;
 
 my $module = 'Test::MockObject::Extends';
@@ -17,9 +16,14 @@ $tme    = $module->new( 'Test::Builder' );
 ok( $tme->isa( 'Test::Builder' ),
 	'passing a class name to new() should set inheritance properly' );
 
-$tme = $module->new( 'CGI' );
-ok( $INC{'CGI.pm'},
-	'new() should load parent module unless already loaded' );
+{
+	local *CGI::foo;
+	*CGI::foo = sub {};
+	$tme      = $module->new( 'CGI' );
+
+	ok( $INC{'CGI.pm'},
+		'new() should load parent module unless already loaded' );
+}
 
 package Some::Class;
 
@@ -81,8 +85,13 @@ $tme->set_always( -foo => 11 );
 is( $tme->foo(), 11, 'unlogged methods should work' );
 ok( ! $tme->called( 'foo' ), '... and logging should not happen for them' );
 
-warning_is { $tme->set_always( foo => 12 ) } undef, 
-	                         '... not throwing redefinition warnings';
+{
+	my $warnings         = '';
+	local $SIG{__WARN__} = sub { $warnings .= shift };
+	$tme->set_always( foo => 12 );
+	is( $warnings, '', '... not throwing redefinition warnings' );
+}
+
 $tme->set_always( foo => 12 );
 is( $tme->foo(), 12,         '... allowing overriding with logged versions' );
 ok( $tme->called( 'foo' ),   '... with logging happening then, obviously'   );
@@ -145,7 +154,8 @@ my $object = Foo->new();
 isa_ok( $object, 'Foo' );
 
 my $mock;
-lives_ok { $mock = Test::MockObject::Extends->new( $object ) };
+lives_ok { $mock = Test::MockObject::Extends->new( $object ) }
+	'Creating a wrapped module should not die';
 isa_ok( $mock, 'Foo'   );
 
 # Call foo()

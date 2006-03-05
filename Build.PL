@@ -9,12 +9,11 @@ my $build = Module::Build->new(
 		'perl'            => '5.6.0',
 		'Scalar::Util'    =>     '',
 		'Test::Simple'    => '0.47',
-		'UNIVERSAL::isa'  => '0.02',
-		'UNIVERSAL::can'  => '1.00',
+		'UNIVERSAL::isa'  => '0.06',
+		'UNIVERSAL::can'  => '1.11',
 	},
 	build_requires =>
 	{
-		'Test::Warn'      =>     '',
 		'Test::Exception' =>     '',
 	},
 	dist_version_from   => 'lib/Test/MockObject.pm',
