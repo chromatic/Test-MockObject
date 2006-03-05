@@ -16,14 +16,9 @@ $tme    = $module->new( 'Test::Builder' );
 ok( $tme->isa( 'Test::Builder' ),
 	'passing a class name to new() should set inheritance properly' );
 
-{
-	local *CGI::foo;
-	*CGI::foo = sub {};
-	$tme      = $module->new( 'CGI' );
-
-	ok( $INC{'CGI.pm'},
-		'new() should load parent module unless already loaded' );
-}
+$tme      = $module->new( 'CGI' );
+ok( $INC{'CGI.pm'},
+	'new() should load parent module unless already loaded' );
 
 package Some::Class;
 
