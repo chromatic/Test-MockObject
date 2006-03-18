@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 30;
+use Test::More tests => 33;
 use Test::Exception;
 
 my $module = 'Test::MockObject::Extends';
@@ -47,17 +47,20 @@ package main;
 $INC{'Some/Class.pm'}    = 1;
 $INC{'Another/Class.pm'} = 1;
 
-$tme = $module->new( 'Some::Class' );
-$tme->set_always( bar => 'mocked' );
+$tme       = $module->new( 'Some::Class' );
+my $result = $tme->set_always( bar => 'mocked' );
 is( $tme->bar(), 'mocked',   'mock() should override method in parent' );
 is( $tme->foo(), 'original', '... calling original methods in parent'  );
+is( $result,           $tme, '... returning invocant'                  );
 
-$tme->unmock( 'bar' );
+$result = $tme->unmock( 'bar' );
 is( $tme->bar(), 'original', 'unmock() should remove method overriding' );
+is( $result,           $tme, '... returning invocant'                   );
 
-$tme->mock( pass_self => sub
+$result = $tme->mock( pass_self => sub
 {
-	is( shift, $tme, '... and should pass along invocant' );
+	is( shift,   $tme, '... and should pass along invocant' );
+	is( $result, $tme, '... returning invocant'             );
 });
 
 $tme->pass_self();

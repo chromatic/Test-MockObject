@@ -5,14 +5,14 @@ MANIFEST
 lib/Test/MockObject.pm
 lib/Test/MockObject/Extends.pm
 README
-t/0-signature.t
 t/base.t
 t/bugs.t
 t/extends.t
 t/extends-bugs.t
 t/isa.t
 t/ignore.t
-t/pod.t
-t/pod-coverage.t
+t/developer/0-signature.t
+t/developer/pod.t
+t/developer/pod-coverage.t
 META.yml          Module meta-data (added by MakeMaker)
 SIGNATURE         Added here by Module::Build

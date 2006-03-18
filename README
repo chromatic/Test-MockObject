@@ -1,4 +1,4 @@
-Test::MockObject version 1.03
+Test::MockObject version 1.04
 =============================
 
 * NOTES *
@@ -7,6 +7,11 @@ Because you can break this module very badly by using the isa() and can()
 methods as if they were functions, version 1.01 uses the UNIVERSAL::isa and
 UNIVERSAL::can modules.  They'll do the right thing but complain about it so
 that you can fix the offending code.  These require Perl 5.6.0 or better.
+
+If you want to run all of the tests (including the developer tests that check
+the signature and POD coverage), set the environment variable
+PERL_RUN_ALL_TESTS to true.  I don't know why you want to do this though,
+unless you're me.
 
 I removed T::MO::add() as of version 1.0.  I deprecated it a long, long time
 ago.  Also, T::MO::E should handle a few more types of extending now, but
@@ -53,8 +58,8 @@ INSTALLATION
 To install this module type the following:
 
    $ perl Build.PL
-   $ ./Build
-   $ ./Build test
+   $ perl ./Build
+   $ perl ./Build test
    # ./Build install
 
 You can also use the Makefile.PL.  I don't.
@@ -64,7 +69,7 @@ DEPENDENCIES
 This module requires these other modules and libraries:
 
 	Test::Simple version 0.44 or newer (I fixed a bug :)
-	Scalar::Util, without which you have a broken Perl installation
+	Scalar::Util, without which you have a broken Perl installation post-5.6
 	UNIVERSAL::isa and UNIVERSAL::can (always the latest versions)
 
 COPYRIGHT AND LICENCE

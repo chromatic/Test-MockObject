@@ -9,7 +9,7 @@ use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 sub new
 {
@@ -153,6 +153,8 @@ sub mock
 		no warnings 'redefine';
 		*{ ref( $self ) . '::' . $name } = $mock_sub;
 	}
+
+	return $self;
 }
 
 sub unmock
@@ -163,6 +165,7 @@ sub unmock
 	no strict 'refs';
 	my $glob = *{ ref( $self ) . '::' };
 	delete $glob->{ $name };
+	return $self;
 }
 
 1;
@@ -183,7 +186,10 @@ Test::MockObject::Extends - mock part of an object or class
   # wrap that same object with a mocking wrapper
   $object         = Test::MockObject::Extends->new( $object );
 
-  $object->set_true( 'parent_method' );
+  # now chain mock and control calls
+  $object->set_true( 'parent_method' )
+         ->set_always( -grandparent_method => 1 )
+         ->clear();
 
 =head1 DESCRIPTION
 
@@ -218,13 +224,14 @@ C<Test::MockObject> object and will oblige you.
 =item C<mock( $methodname, $sub_ref )>
 
 See the documentation for Test::MockObject for all of the ways to mock methods
-and to retrieve method logging information.
+and to retrieve method logging information.  These methods return the invocant,
+so you can chain them.
 
 =item C<unmock( $methodname )>
 
 Removes any active mocking of the named method.  This means any calls to that
 method will hit the method of that name in the class being mocked, if it
-exists.
+exists.  This method returns the invocant, you can chain it.
 
 =item C<isa( $class )>
 

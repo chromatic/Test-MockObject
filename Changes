@@ -1,5 +1,10 @@
 Revision history for Perl extension Test::MockObject.
 
+1.04
+	Sat Mar 18 21:52:52 UTC 2006 (chromatic)
+	- made all T::MO::E mocking methods return the invocant (bugfix)
+	- moved developer tests under t/developer/ to avoid running by default
+
 1.03
 	Sun Mar  5 01:43:20 UTC 2006 (chromatic)
 	- removed test dependency on Test::Warn
