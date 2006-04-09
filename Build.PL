@@ -28,7 +28,6 @@ my $class = Module::Build->subclass(
 END_HERE
 );
 
-
 my $build = $class->new(
 	module_name => 'Test::MockObject',
 	license     => 'perl',
@@ -36,7 +35,7 @@ my $build = $class->new(
 	requires    =>
 	{
 		'perl'            => '5.6.0',
-		'Scalar::Util'    =>     '',
+		'Scalar::Util'    => '1.1.4',
 		'Test::Simple'    => '0.47',
 		'UNIVERSAL::isa'  => '0.06',
 		'UNIVERSAL::can'  => '1.11',

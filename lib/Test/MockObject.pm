@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 use Scalar::Util qw( blessed refaddr reftype weaken );
 use UNIVERSAL::isa;
@@ -99,14 +99,20 @@ sub set_bound
 	$self->mock( $name,  $bindings{reftype( $ref )} );
 }
 
+# hack around debugging mode being too smart for my sub names
+my $old_p;
 BEGIN
 {
-	no strict 'refs';
+	$old_p  = $^P;
+	$^P    &= ~0x200;
+}
 
+BEGIN
+{
 	for my $universal
 	( { sub => \&_subs, name => 'can' }, { sub => \&_isas, name => 'isa' } )
 	{
-		*{ $universal->{name} } = sub
+		my $sub = sub
 		{
 			my ($self, $sub) = @_; 
 			local *__ANON__  = $universal->{name};
@@ -117,7 +123,12 @@ BEGIN
 			my $parent = 'SUPER::' . $universal->{name};
 			return $self->$parent( $sub );
 		};
+
+		no strict 'refs';
+		*{ $universal->{name} } = $sub;
 	}
+
+	$^P = $old_p;
 }
 
 sub remove

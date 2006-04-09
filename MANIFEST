@@ -7,6 +7,7 @@ lib/Test/MockObject/Extends.pm
 README
 t/base.t
 t/bugs.t
+t/debugger.t
 t/extends.t
 t/extends-bugs.t
 t/isa.t

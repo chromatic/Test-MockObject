@@ -1,5 +1,9 @@
 Revision history for Perl extension Test::MockObject.
 
+1.05
+	Sun Apr  9 05:58:52 UTC 2006 ($Rev$, $Author$)
+	- fixed anonymous subroutine name interaction with the debugger
+
 1.04
 	Sat Mar 18 21:52:52 UTC 2006 (chromatic)
 	- made all T::MO::E mocking methods return the invocant (bugfix)

@@ -9,7 +9,7 @@ use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 sub new
 {
