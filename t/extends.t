@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 33;
+use Test::More tests => 34;
 use Test::Exception;
 
 my $module = 'Test::MockObject::Extends';
@@ -117,6 +117,8 @@ ok( ! $Parent::somethingnasty, "Method didn't trigger bad method" );
 
 package Foo;
 
+@Foo::ISA = 'Parent';
+
 my ($called_foo, $called_autoload, $method_name);
 
 use vars '$AUTOLOAD';
@@ -166,3 +168,8 @@ is( $Foo::AUTOLOAD,   undef, '... or $Foo::AUTOLOAD'           );
 is( $mock->bar(),     'autoload', 'bad() should returns as expected'        );
 is( $called_autoload,          1, '... calling AUTOLOAD()'                  );
 is( $method_name,     'Foo::bar', '... with the appropriate $Foo::AUTOLOAD' );
+
+# get the parents of the mocked object (to work with SUPER)
+$result = [ $mock->__get_parents() ];
+is_deeply( $result, [qw( Parent )],
+	'__get_parents() should return a list of parents of the wrapped object' );

@@ -1,7 +1,11 @@
 Revision history for Perl extension Test::MockObject.
 
+1.06
+	Fri Apr 21 01:03:27 UTC 2006 (chromatic)
+	- added __get_parents() to list wrapped object's parents in T::M::O::E
+
 1.05
-	Sun Apr  9 05:58:52 UTC 2006 ($Rev$, $Author$)
+	Sun Apr  9 05:58:52 UTC 2006 (chromatic)
 	- fixed anonymous subroutine name interaction with the debugger
 
 1.04

@@ -9,7 +9,7 @@ use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.05';
+$VERSION = '1.06';
 
 sub new
 {
@@ -65,14 +65,25 @@ sub gen_package
 	my $package                  = 'T::MO::E::' . $packname++;
 
 	no strict 'refs';
-	*{ $package . '::mock'     } = \&mock;
-	*{ $package . '::unmock'   } = \&unmock;
-	*{ $package . '::ISA'      } = [ $parent ];
-	*{ $package . '::can'      } = $class->gen_can( $parent );
-	*{ $package . '::isa'      } = $class->gen_isa( $parent );
-	*{ $package . '::AUTOLOAD' } = $class->gen_autoload( $parent );
+	*{ $package . '::mock'          } = \&mock;
+	*{ $package . '::unmock'        } = \&unmock;
+	*{ $package . '::ISA'           } = [ $parent ];
+	*{ $package . '::can'           } = $class->gen_can( $parent );
+	*{ $package . '::isa'           } = $class->gen_isa( $parent );
+	*{ $package . '::AUTOLOAD'      } = $class->gen_autoload( $parent );
+	*{ $package . '::__get_parents' } = $class->gen_get_parents( $parent );
 
 	return $package;
+}
+
+sub gen_get_parents
+{
+	my ($self, $parent) = @_;
+	return sub
+	{
+		no strict 'refs';
+		return @{ $parent . '::ISA' };
+	};
 }
 
 sub gen_isa
@@ -267,6 +278,11 @@ order as C<gen_autoload()>.
 =item * C<gen_isa( $extended )>
 
 Returns an C<isa()> method for the mock object that claims to be the
+C<$extended> object appropriately.
+
+=item * C<gen_get_parents( $extended )>
+
+Returns a C<__get_parents()> method for the mock object that claims to be the
 C<$extended> object appropriately.
 
 =item * C<gen_package( $extended )>
