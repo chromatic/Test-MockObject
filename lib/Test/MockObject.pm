@@ -92,7 +92,6 @@ sub set_bound
 		SCALAR => sub { $$ref },
 		ARRAY  => sub { @$ref },
 		HASH   => sub { %$ref },
-
 	);
 
 	return unless exists $bindings{reftype( $ref )};
@@ -142,7 +141,8 @@ sub called
 {
 	my ($self, $sub) = @_;
 
-	for my $called (reverse @{ _calls( $self ) }) {
+	for my $called (reverse @{ _calls( $self ) })
+	{
 		return 1 if $called->[0] eq $sub;
 	}
 
@@ -285,6 +285,13 @@ sub called_args_pos_is
 sub fake_module
 {
 	my ($class, $modname, %subs) = @_;
+
+	if ($class->check_class_loaded( $modname ) and ! keys %subs)
+	{
+		require Carp;
+		Carp::croak( "No mocked subs for loaded module '$modname'" );
+	}
+
 	$modname =~ s!::!/!g;
 	$INC{ $modname . '.pm' } = 1;
 
@@ -304,6 +311,30 @@ sub fake_module
 		}
 		*{ $_[1] . '::' . $sub } = $subs{ $sub };
 	}
+}
+
+sub check_class_loaded
+{
+	my ($self, $class, $load_flag) = @_;
+
+	(my $path    = $class) =~ s{::}{/}g;
+	return 1 if exists $INC{ $path . '.pm' };
+
+	my $symtable = \%main::;
+	my $found    = 1;
+
+	for my $symbol ( split( '::', $class ))
+	{
+		unless (exists $symtable->{ $symbol . '::' })
+		{
+			$found = 0;
+			last;
+		}
+
+		$symbol = $symtable->{ $symbol . '::' };
+	}
+
+	return $found;
 }
 
 sub fake_new
@@ -538,6 +569,12 @@ C<import()>:
 	is( $import, 'Regexp::Esperanto',
 		'Regexp::Esperanto should use() Regexp::English' );
 
+If you use C<fake_module()> to mock a module that already exists in memory --
+one you've loaded elsewhere perhaps, but do not pass any subroutines to mock,
+this method will throw an exception.  This is because if you call the
+constructor later on, you probably won't get a mock object back and you'll be
+confused.
+
 =item * C<fake_new(I<module name>)>
 
 B<Note:> see L<Test::MockObject::Extends> for a better alternative to this
@@ -753,6 +790,11 @@ Joins together all of the arguments to a method at the appropriate position and
 matches against a specified string.  A generically bland test name is provided
 by default.  You can probably do much better.
 
+=item C<check_class_loaded( $class_name )>
+
+Attempts to determine whether you have a class of the given name loaded and
+compiled.  Returns true or false.
+
 =back
 
 =head3 Logging
@@ -816,6 +858,10 @@ Test::MockObject::Extends.
 
 Stevan Little provided the impetus and code for C<set_isa()>.
 
+Nicholas Clark found a documentation error.
+
+Mutant suggested a potential problem with fake_module().
+
 =head1 SEE ALSO
 
 L<perl>, L<Test::Tutorial>, L<Test::More>,
@@ -825,7 +871,7 @@ L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2002E<sol>07E<sol>10E<sol>t
 
 =head1 COPYRIGHT
 
-Copyright 2002 - 2005 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
+Copyright (c) 2002 - 2006 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
 
 This program is free software; you can use, modify, and redistribute it under
 the same terms as Perl 5.8.x itself.

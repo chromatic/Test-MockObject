@@ -27,26 +27,13 @@ sub new
 sub check_class_loaded
 {
 	my ($self, $parent_class) = @_;
+	my $result                = Test::MockObject->check_class_loaded(
+		$parent_class
+	);
+	return $result if $result;
 
-	my $symtable = \%main::;
-	my $found    = 1;
-
-	for my $symbol ( split( '::', $parent_class ))
-	{
-		unless (exists $symtable->{ $symbol . '::' })
-		{
-			$found = 0;
-			last;
-		}
-
-		$symbol = $symtable->{ $symbol . '::' };
-	}
-
-	unless ($found)
-	{
-		(my $load_class  = $parent_class) =~ s/::/\//g;
-		require $load_class . '.pm';
-	}
+	(my $load_class  = $parent_class) =~ s/::/\//g;
+	require $load_class . '.pm';
 }
 
 sub get_class
