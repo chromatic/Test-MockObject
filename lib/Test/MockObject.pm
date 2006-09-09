@@ -769,7 +769,7 @@ will set mock both C<foo()> and C<bar()>, causing both to return true.
 However, the object will log only calls to C<bar()>, not C<foo()>.  To log
 C<foo()> again, merely mock it again without the leading C<->:
 
-	$mock->set_true( '-foo' );
+	$mock->set_true( 'foo' );
 
 C<$mock> will log all subsequent calls to C<foo()> again.
 
