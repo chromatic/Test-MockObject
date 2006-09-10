@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 my $package = 'Test::MockObject';
-use Test::More tests => 94;
+use Test::More tests => 103;
 use_ok( $package );
 
 # new()
@@ -153,6 +153,37 @@ can_ok( $package, 'fake_new' );
 $mock->fake_new( 'Some::Module' );
 is( Some::Module->new(), $mock, 
 	'fake_new() should create a fake constructor to return mock object' );
+
+can_ok( $package, 'check_class_loaded' );
+ok( $package->check_class_loaded( 'Test::MockObject' ),
+	'check_class_loaded() should return true for loaded class' );
+
+ok( ! $package->check_class_loaded( 'Test::MockObject::Bob' ),
+	'... and false for unloaded class' );
+
+ok( $package->check_class_loaded( 'strict' ),
+	'... true for loaded class with no colons' );
+
+ok( ! $package->check_class_loaded( 'unstrict' ),
+	'... false for unloaded class with no colons' );
+
+package Blah;
+package Blah::Nested;
+package main;
+
+ok( $package->check_class_loaded( 'Blah' ),
+	'... true for defined class even with no symbols' );
+
+ok( $package->check_class_loaded( 'Blah::Nested' ),
+	'... true for defined class with colons but with no symbols' );
+
+$INC{'Some.pm'}         = 1;
+$INC{'Some/Package.pm'} = 1;
+
+ok( $package->check_class_loaded( 'Some' ), '... true for class in %INC' );
+
+ok( $package->check_class_loaded( 'Some::Package' ),
+	'... and true for class with colons in %INC' );
 
 can_ok( $package, 'set_bound' );
 $arg = 1;

@@ -331,7 +331,7 @@ sub check_class_loaded
 			last;
 		}
 
-		$symbol = $symtable->{ $symbol . '::' };
+		$symtable = $symtable->{ $symbol . '::' };
 	}
 
 	return $found;

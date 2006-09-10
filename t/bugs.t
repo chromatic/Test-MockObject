@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 17;
+use Test::More tests => 18;
 use Test::MockObject;
 
 use Scalar::Util 'weaken';
@@ -166,4 +166,18 @@ is( $o->foo(), 'foo', '... but should not interfere with method finding' );
 	eval { $mock->fake_module( 'Some::Module' ) };
 	like( $@, qr/No mocked subs for loaded module 'Some::Module'/,
 		'fake_module() should throw exception for loaded module without mocks');
+}
+
+# Adam Kennedy reported RT #19448 - typo in check_class_loaded()
+{
+	my $mock = Test::MockObject->new();
+
+	package Foo::Bar;
+
+	sub foo {}
+
+	package main;
+
+	ok( $mock->check_class_loaded( 'Foo::Bar' ),
+		'check_class_loaded() should work for nested class names' );
 }

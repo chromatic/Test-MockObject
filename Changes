@@ -5,6 +5,8 @@ Revision history for Perl extension Test::MockObject.
 	- fixed a logging documentation error (Nicholas Clark)
 	- made fake_module() croak when mocking a loaded module but not mocking
 	  subs (RT #21049, reported by Mutant)
+	- tested check_class_loaded() more carefully (fixes RT #19448, reported by
+	  Adam Kennedy)
 
 1.06
 	Fri Apr 21 01:03:27 UTC 2006 (chromatic)
