@@ -297,8 +297,10 @@ sub fake_module
 
 	my $warn = $SIG{__WARN__};
 	local $SIG{__WARN__} = sub { $warn->( $_[0] ) unless $_[0] =~ /redefined/ };
-	no strict 'refs';
-	${ $modname . '::' }{VERSION} ||= -1;
+	{
+		no strict 'refs';
+		${ $modname . '::' }{VERSION} ||= -1;
+	}
 
 	for my $sub (keys %subs)
 	{
@@ -309,6 +311,7 @@ sub fake_module
 			Carp::carp("'$sub' is not a code reference" );
 			next;
 		}
+		no strict 'refs';
 		*{ $_[1] . '::' . $sub } = $subs{ $sub };
 	}
 }

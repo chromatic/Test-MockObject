@@ -1,6 +1,9 @@
 Revision history for Perl extension Test::MockObject.
 
 1.07
+	Sat Sep 30 04:18:23 UTC 2006 (chromatic)
+	- fixed incorrect version request for Scalar::Util (alexchorny, RT #21773)
+
 	Sat Sep  9 21:19:35 UTC 2006 (chromatic)
 	- fixed a logging documentation error (Nicholas Clark)
 	- made fake_module() croak when mocking a loaded module but not mocking
