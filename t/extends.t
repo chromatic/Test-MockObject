@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 34;
+use Test::More tests => 41;
 use Test::Exception;
 
 my $module = 'Test::MockObject::Extends';
@@ -173,3 +173,51 @@ is( $method_name,     'Foo::bar', '... with the appropriate $Foo::AUTOLOAD' );
 $result = [ $mock->__get_parents() ];
 is_deeply( $result, [qw( Parent )],
 	'__get_parents() should return a list of parents of the wrapped object' );
+
+
+package FooNoAutoload;
+
+my ($called_fooNA, $called_autoloadNA, $method_nameNA);
+
+sub new
+{
+	bless {}, $_[0];
+}
+
+sub fooNA
+{
+	$called_fooNA++;
+	return 'fooNA';
+}
+
+package main;
+
+
+
+BEGIN
+{
+	$called_fooNA      = 0;
+	$called_autoloadNA = 0;
+	$method_nameNA     = '';
+}
+
+
+$object = FooNoAutoload->new();
+isa_ok( $object, 'FooNoAutoload' );
+
+undef $mock;
+lives_ok { $mock = Test::MockObject::Extends->new( $object ) }
+	'Creating a wrapped module should not die';
+isa_ok( $mock, 'FooNoAutoload'   ); #37
+
+# Call foo()
+is( $mock->fooNA(),     'fooNA', 'fooNA() should return as expected' );
+is( $called_fooNA,          1, '... calling the method'          );
+is( $called_autoloadNA,     0, '... not touching AUTOLOAD()'     );
+
+# Call a non-existent method
+dies_ok (sub{ $mock->bar()},     
+    '... should die if calling a non-mocked and non-AUTOLOADED method' );
+
+
+

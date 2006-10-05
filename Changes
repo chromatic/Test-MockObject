@@ -1,6 +1,10 @@
 Revision history for Perl extension Test::MockObject.
 
 1.07
+	Thu Oct  5 05:46:04 UTC 2006 (chromatic)
+	- T::MO::E should die when called with an unhandleable method (Paul the
+	  Nomad)
+
 	Sat Sep 30 04:18:23 UTC 2006 (chromatic)
 	- fixed incorrect version request for Scalar::Util (alexchorny, RT #21773)
 

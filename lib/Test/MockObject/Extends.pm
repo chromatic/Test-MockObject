@@ -130,6 +130,10 @@ sub gen_autoload
 			unshift @_, $self;
 			goto &$parent_al;
 		}
+		else
+		{
+			die "Undefined method $method at ", join( ' ', caller() ), "\n";
+		}
 	};
 }
 
