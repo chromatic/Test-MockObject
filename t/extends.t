@@ -192,15 +192,12 @@ sub fooNA
 
 package main;
 
-
-
 BEGIN
 {
 	$called_fooNA      = 0;
 	$called_autoloadNA = 0;
 	$method_nameNA     = '';
 }
-
 
 $object = FooNoAutoload->new();
 isa_ok( $object, 'FooNoAutoload' );
@@ -218,6 +215,3 @@ is( $called_autoloadNA,     0, '... not touching AUTOLOAD()'     );
 # Call a non-existent method
 dies_ok (sub{ $mock->bar()},     
     '... should die if calling a non-mocked and non-AUTOLOADED method' );
-
-
-

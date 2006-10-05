@@ -12,8 +12,6 @@ t/extends.t
 t/extends-bugs.t
 t/isa.t
 t/ignore.t
-t/developer/0-signature.t
 t/developer/pod.t
 t/developer/pod-coverage.t
 META.yml          Module meta-data (added by MakeMaker)
-SIGNATURE         Added here by Module::Build

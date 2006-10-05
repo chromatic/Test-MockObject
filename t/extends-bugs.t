@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 32;
+use Test::More tests => 33;
 use Test::Exception;
 
 my $module = 'Test::MockObject::Extends';
@@ -145,3 +145,13 @@ is( $Foo::AUTOLOAD, 'Bar::that',
 
 # Get rid of a silly warning
 $Bar::AUTOLOAD = $Bar::AUTOLOAD;
+
+package Obj;
+
+sub class_method { 'TRUE-CLASS-METHOD' }
+
+package main;
+
+my $o = Test::MockObject::Extends->new('Obj')->set_always(
+	-class_method => 'FAKED RESULT' );
+is(  $o->class_method, 'FAKED RESULT', 'class method mocked' );

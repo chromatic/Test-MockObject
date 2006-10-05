@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.06';
+$VERSION = '1.07';
 
 use Scalar::Util qw( blessed refaddr reftype weaken );
 use UNIVERSAL::isa;
@@ -793,7 +793,7 @@ Joins together all of the arguments to a method at the appropriate position and
 matches against a specified string.  A generically bland test name is provided
 by default.  You can probably do much better.
 
-=item C<check_class_loaded( $class_name )>
+=item * C<check_class_loaded( $class_name )>
 
 Attempts to determine whether you have a class of the given name loaded and
 compiled.  Returns true or false.

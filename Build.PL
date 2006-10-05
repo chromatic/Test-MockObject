@@ -31,7 +31,6 @@ END_HERE
 my $build = $class->new(
 	module_name => 'Test::MockObject',
 	license     => 'perl',
-	sign        => 1,
 	requires    =>
 	{
 		'perl'            => '5.6.0',

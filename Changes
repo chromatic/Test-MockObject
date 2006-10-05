@@ -2,6 +2,8 @@ Revision history for Perl extension Test::MockObject.
 
 1.07
 	Thu Oct  5 05:46:04 UTC 2006 (chromatic)
+	- clarified class mocking documentation (reported by Praveen Ray)
+
 	- T::MO::E should die when called with an unhandleable method (Paul the
 	  Nomad)
 

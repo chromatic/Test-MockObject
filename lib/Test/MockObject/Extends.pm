@@ -9,7 +9,7 @@ use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.06';
+$VERSION = '1.07';
 
 sub new
 {
@@ -223,6 +223,9 @@ This may fail, so beware.
 If you pass no arguments, it will assume you really meant to create a normal
 C<Test::MockObject> object and will oblige you.
 
+Note that if you pass a class, the object returned will appear to be an
+instance of that class; I<this does not mock the class itself>.
+
 =item C<mock( $methodname, $sub_ref )>
 
 See the documentation for Test::MockObject for all of the ways to mock methods
@@ -301,7 +304,8 @@ C<Test::MockObject>, though this should be rare.
 chromatic, E<lt>chromatic at wgz dot orgE<gt>
 
 Documentation bug fixed by Stevan Little.  Additional AUTOLOAD approach
-suggested by Adam Kennedy.
+suggested by Adam Kennedy.  Other bugs reported by Paul the Nomad and Praveen
+Ray.  Thank you all!
 
 =head1 BUGS
 

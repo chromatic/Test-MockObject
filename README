@@ -1,4 +1,4 @@
-Test::MockObject version 1.05
+Test::MockObject version 1.07
 =============================
 
 * NOTES *
@@ -69,6 +69,7 @@ DEPENDENCIES
 This module requires these other modules and libraries:
 
 	Test::Simple version 0.44 or newer (I fixed a bug :)
+	Test::Exception
 	Scalar::Util, without which you have a broken Perl installation post-5.6
 	UNIVERSAL::isa and UNIVERSAL::can (always the latest versions)
 
