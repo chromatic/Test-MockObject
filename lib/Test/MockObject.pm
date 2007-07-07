@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.07';
+$VERSION = '1.08';
 
 use Scalar::Util qw( blessed refaddr reftype weaken );
 use UNIVERSAL::isa;
