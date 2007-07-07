@@ -54,7 +54,7 @@ sub gen_package
 	no strict 'refs';
 	*{ $package . '::mock'          } = \&mock;
 	*{ $package . '::unmock'        } = \&unmock;
-	*{ $package . '::ISA'           } = [ $parent ];
+	@{ $package . '::ISA'           } = ( $parent );
 	*{ $package . '::can'           } = $class->gen_can( $parent );
 	*{ $package . '::isa'           } = $class->gen_isa( $parent );
 	*{ $package . '::AUTOLOAD'      } = $class->gen_autoload( $parent );
