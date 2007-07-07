@@ -1,12 +1,15 @@
-Test::MockObject version 1.07
+Test::MockObject version 1.08
 =============================
 
 * NOTES *
 
 Because you can break this module very badly by using the isa() and can()
-methods as if they were functions, version 1.01 uses the UNIVERSAL::isa and
-UNIVERSAL::can modules.  They'll do the right thing but complain about it so
-that you can fix the offending code.  These require Perl 5.6.0 or better.
+methods as if they were functions, version 1.01 started to use the
+UNIVERSAL::isa and UNIVERSAL::can modules.  They'll do the right thing but
+complain about it so that you can fix the offending code.  These require Perl
+5.6.0 or better.
+
+Newer versions of those modules will complain less; see 1.20 of each.
 
 If you want to run all of the tests (including the developer tests that check
 the signature and POD coverage), set the environment variable
@@ -75,6 +78,6 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Copyright (c) 2002 - 2006 chromatic. All rights reserved.  This program is free
+Copyright (c) 2002 - 2007 chromatic. All rights reserved.  This program is free
 software; you can redistribute it and/or modify it under the same terms as Perl
 itself.
