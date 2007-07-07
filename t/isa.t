@@ -10,18 +10,18 @@ my $mock = Test::MockObject->new();
 
 can_ok( $mock, 'set_isa' );
 
-diag( 'set_isa() should make isa() report true for the given parents' );
+# set_isa() should make isa() report true for the given parents
 $mock->set_isa( 'CGI', 'Apache::Request', 'Apache' );
 
 isa_ok( $mock, 'CGI' );
 isa_ok( $mock, 'Apache' );
 
-diag( '... it should be able to add parents' );
+# ... it should be able to add parents
 $mock->set_isa( 'Something' );
 isa_ok( $mock, 'Something' );
 
-diag( '... without overwriting previous parents' );
+# ... without overwriting previous parents
 isa_ok( $mock, 'Apache::Request' );
 
-diag( '... or reporting true for everything' );
+# ... or reporting true for everything
 ok( ! $mock->isa( 'Fail' ), '... this is not a "Fail" object' );

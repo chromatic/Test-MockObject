@@ -9,14 +9,14 @@ use Test::Exception;
 my $module = 'Test::MockObject::Extends';
 use_ok( $module ) or exit;
 
-diag( 'RT #17692 - cannot mock inline package without new()' );
+# RT #17692 - cannot mock inline package without new()
 
 { package InlinePackageNoNew; sub foo; }
 
 lives_ok { Test::MockObject::Extends->new( 'InlinePackageNoNew' ) }
 	'Mocking a package defined inline should not load anything';
 
-diag( 'RT #15446 - isa() ignores type of blessed reference' );
+# RT #15446 - isa() ignores type of blessed reference
 
 # fake that Foo is loaded
 $INC{'Foo.pm'} = './Foo.pm';
@@ -40,7 +40,7 @@ ok( $obj->isa( 'HASH' ), 'The extended object isa HASH' );
 ok( UNIVERSAL::isa( $obj, 'HASH' ),
 	"...also if UNIVERSAL::isa() is called as a function" );
 
-diag( 'RT #14445 - inherited AUTOLOAD does not work correctly' );
+# RT #14445 - inherited AUTOLOAD does not work correctly
 
 CLASS:
 {

@@ -1,5 +1,9 @@
 Revision history for Perl extension Test::MockObject.
 
+1.08
+    Fri Jun 29 01:36:24 UTC 2007 (chromatic)
+    - removed noisy diag() calls from successful tests (RT #19444, Adam Kennedy)
+
 1.07
 	Thu Oct  5 05:46:04 UTC 2006 (chromatic)
 	- clarified class mocking documentation (reported by Praveen Ray)
