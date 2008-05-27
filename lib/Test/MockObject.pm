@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.08';
+$VERSION = '1.09';
 
 use Scalar::Util qw( blessed refaddr reftype weaken );
 use UNIVERSAL::isa;
@@ -17,24 +17,24 @@ my (%calls, %subs);
 
 sub new
 {
-	my ($class, $type) = @_;
-	$type ||= {};
-	bless $type, $class;
+    my ($class, $type) = @_;
+    $type ||= {};
+    bless $type, $class;
 }
 
 sub mock
 {
-	my ($self, $name, $sub) = @_;
-	$sub ||= sub {};
+    my ($self, $name, $sub) = @_;
+    $sub ||= sub {};
 
-	# leading dash means unlog, otherwise do log
-	_set_log( $self, $name, ( $name =~ s/^-// ? 0 : 1 ) );
-	_subs( $self )->{$name} = $sub;
+    # leading dash means unlog, otherwise do log
+    _set_log( $self, $name, ( $name =~ s/^-// ? 0 : 1 ) );
+    _subs( $self )->{$name} = $sub;
 
-	$self;
+    $self;
 }
 
-sub set_isa 
+sub set_isa
 {
     my ($self, @supers) = @_;
     my $supers          = _isas( $self );
@@ -43,397 +43,396 @@ sub set_isa
 
 sub set_always
 {
-	my ($self, $name, $value) = @_;
-	$self->mock( $name, sub { $value } );
+    my ($self, $name, $value) = @_;
+    $self->mock( $name, sub { $value } );
 }
 
 sub set_true
 {
-	my $self = shift;
+    my $self = shift;
 
-	for my $name ( @_ )
-	{
-		$self->mock( $name, sub { 1 } );
-	}
+    for my $name ( @_ )
+    {
+        $self->mock( $name, sub { 1 } );
+    }
 
-	return $self;
+    return $self;
 }
 
 sub set_false
 {
-	my $self = shift;
+    my $self = shift;
 
-	for my $name ( @_ )
-	{
-		$self->mock( $name, sub {} );
-	}
+    for my $name ( @_ )
+    {
+        $self->mock( $name, sub {} );
+    }
 
-	return $self;
+    return $self;
 }
 
 sub set_list
 {
-	my ($self, $name, @list) = @_;
-	$self->mock( $name, sub { @{[ @list ]} } );
+    my ($self, $name, @list) = @_;
+    $self->mock( $name, sub { @{[ @list ]} } );
 }
 
 sub set_series
 {
-	my ($self, $name, @list) = @_;
-	$self->mock( $name, sub { return unless @list; shift @list } );
+    my ($self, $name, @list) = @_;
+    $self->mock( $name, sub { return unless @list; shift @list } );
 }
 
 sub set_bound
 {
-	my ($self, $name, $ref) = @_;
+    my ($self, $name, $ref) = @_;
 
-	my %bindings =
-	(
-		SCALAR => sub { $$ref },
-		ARRAY  => sub { @$ref },
-		HASH   => sub { %$ref },
-	);
+    my %bindings =
+    (
+        SCALAR => sub { $$ref },
+        ARRAY  => sub { @$ref },
+        HASH   => sub { %$ref },
+    );
 
-	return unless exists $bindings{reftype( $ref )};
-	$self->mock( $name,  $bindings{reftype( $ref )} );
+    return unless exists $bindings{reftype( $ref )};
+    $self->mock( $name,  $bindings{reftype( $ref )} );
 }
 
 # hack around debugging mode being too smart for my sub names
 my $old_p;
 BEGIN
 {
-	$old_p  = $^P;
-	$^P    &= ~0x200;
+    $old_p  = $^P;
+    $^P    &= ~0x200;
 }
 
 BEGIN
 {
-	for my $universal
-	( { sub => \&_subs, name => 'can' }, { sub => \&_isas, name => 'isa' } )
-	{
-		my $sub = sub
-		{
-			my ($self, $sub) = @_; 
-			local *__ANON__  = $universal->{name};
+    for my $universal
+    ( { sub => \&_subs, name => 'can' }, { sub => \&_isas, name => 'isa' } )
+    {
+        my $sub = sub
+        {
+            my ($self, $sub) = @_;
+            local *__ANON__  = $universal->{name};
 
-			# mockmethods are special cases, class methods are handled directly
-			my $lookup = $universal->{sub}->( $self );
-			return $lookup->{$sub} if blessed $self and exists $lookup->{$sub};
-			my $parent = 'SUPER::' . $universal->{name};
-			return $self->$parent( $sub );
-		};
+            # mockmethods are special cases, class methods are handled directly
+            my $lookup = $universal->{sub}->( $self );
+            return $lookup->{$sub} if blessed $self and exists $lookup->{$sub};
+            my $parent = 'SUPER::' . $universal->{name};
+            return $self->$parent( $sub );
+        };
 
-		no strict 'refs';
-		*{ $universal->{name} } = $sub;
-	}
+        no strict 'refs';
+        *{ $universal->{name} } = $sub;
+    }
 
-	$^P = $old_p;
+    $^P = $old_p;
 }
 
 sub remove
 {
-	my ($self, $sub) = @_;
-	delete _subs( $self )->{$sub};
-	$self;
+    my ($self, $sub) = @_;
+    delete _subs( $self )->{$sub};
+    $self;
 }
 
 sub called
 {
-	my ($self, $sub) = @_;
+    my ($self, $sub) = @_;
 
-	for my $called (reverse @{ _calls( $self ) })
-	{
-		return 1 if $called->[0] eq $sub;
-	}
+    for my $called (reverse @{ _calls( $self ) })
+    {
+        return 1 if $called->[0] eq $sub;
+    }
 
-	return 0;
+    return 0;
 }
 
 sub clear
 {
-	my $self             = shift;
-	@{ _calls( $self ) } = ();
-	$self;
+    my $self             = shift;
+    @{ _calls( $self ) } = ();
+    $self;
 }
 
 sub call_pos
 {
-	$_[0]->_call($_[1], 0);
+    $_[0]->_call($_[1], 0);
 }
 
 sub call_args
 {
-	return @{ $_[0]->_call($_[1], 1) };
+    return @{ $_[0]->_call($_[1], 1) };
 }
 
 sub _call
 {
-	my ($self, $pos, $type) = @_;
-	my $calls               = _calls( $self );
-	return if abs($pos) > @$calls;
-	$pos-- if $pos > 0;
-	return $calls->[$pos][$type];
+    my ($self, $pos, $type) = @_;
+    my $calls               = _calls( $self );
+    return if abs($pos) > @$calls;
+    $pos-- if $pos > 0;
+    return $calls->[$pos][$type];
 }
 
 sub call_args_string
 {
-	my $args = $_[0]->_call( $_[1], 1 ) or return;
-	return join($_[2] || '', @$args);
+    my $args = $_[0]->_call( $_[1], 1 ) or return;
+    return join($_[2] || '', @$args);
 }
 
 sub call_args_pos
 {
-	my ($self, $subpos, $argpos) = @_;
-	my $args = $self->_call( $subpos, 1 ) or return;
-	$argpos-- if $argpos > 0;
-	return $args->[$argpos];
+    my ($self, $subpos, $argpos) = @_;
+    my $args = $self->_call( $subpos, 1 ) or return;
+    $argpos-- if $argpos > 0;
+    return $args->[$argpos];
 }
 
 sub next_call
 {
-	my ($self, $num)  = @_;
-	$num            ||= 1;
+    my ($self, $num)  = @_;
+    $num            ||= 1;
 
-	my $calls = _calls( $self );
-	return unless @$calls >= $num;
+    my $calls = _calls( $self );
+    return unless @$calls >= $num;
 
-	my ($call) = (splice(@$calls, 0, $num))[-1];
-	return wantarray() ? @$call : $call->[0];
+    my ($call) = (splice(@$calls, 0, $num))[-1];
+    return wantarray() ? @$call : $call->[0];
 }
 
 sub AUTOLOAD
 {
-	my $self = shift;
-	my $sub;
-	{
-		local $1;
-		($sub) = $AUTOLOAD =~ /::(\w+)\z/;
-	}
-	return if $sub eq 'DESTROY';
+    my $self = shift;
+    my $sub;
+    {
+        local $1;
+        ($sub) = $AUTOLOAD =~ /::(\w+)\z/;
+    }
+    return if $sub eq 'DESTROY';
 
-	$self->dispatch_mocked_method( $sub, @_ );
+    $self->dispatch_mocked_method( $sub, @_ );
 }
 
 sub dispatch_mocked_method
 {
-	my $self = $_[0];
-	my $sub  = splice( @_, 1, 1 );
+    my $self = $_[0];
+    my $sub  = splice( @_, 1, 1 );
 
-	my $subs = _subs( $self );
-	if (exists $subs->{$sub})
-	{
-		$self->log_call( $sub, @_ );
-		goto &{ $subs->{$sub} };
-	}
-	else
-	{
-		require Carp;
-		Carp::carp("Un-mocked method '$sub()' called");
-	}
+    my $subs = _subs( $self );
+    if (exists $subs->{$sub})
+    {
+        $self->log_call( $sub, @_ );
+        goto &{ $subs->{$sub} };
+    }
+    else
+    {
+        require Carp;
+        Carp::carp("Un-mocked method '$sub()' called");
+    }
 
-	return;
+    return;
 }
 
 sub log_call
 {
-	my ($self, $sub, @call_args) = @_;
-	return unless _logs( $self, $sub );
+    my ($self, $sub, @call_args) = @_;
+    return unless _logs( $self, $sub );
 
-	# prevent circular references with weaken
-	for my $arg ( @call_args )
-	{
-		next unless ref $arg;
-		weaken( $arg ) if refaddr( $arg ) eq refaddr( $self );
-	}		
+    # prevent circular references with weaken
+    for my $arg ( @call_args )
+    {
+        next unless ref $arg;
+        weaken( $arg ) if refaddr( $arg ) eq refaddr( $self );
+    }
 
-	push @{ _calls( $self ) }, [ $sub, \@call_args ];
+    push @{ _calls( $self ) }, [ $sub, \@call_args ];
 }
 
 sub called_ok
 {
-	my ($self, $sub, $name) = @_;
-	$name ||= "object called '$sub'";
-	$Test->ok( $self->called($sub), $name );
+    my ($self, $sub, $name) = @_;
+    $name ||= "object called '$sub'";
+    $Test->ok( $self->called($sub), $name );
 }
 
 sub called_pos_ok
 {
-	my ($self, $pos, $sub, $name) = @_;
-	$name ||= "object called '$sub' at position $pos";
-	my $called = $self->call_pos($pos, $sub);
-	unless ($Test->ok( (defined $called and $called eq $sub), $name ))
-	{
-		$called = 'undef' unless defined $called;
-		$Test->diag("Got:\n\t'$called'\nExpected:\n\t'$sub'\n");
-	}
+    my ($self, $pos, $sub, $name) = @_;
+    $name ||= "object called '$sub' at position $pos";
+    my $called = $self->call_pos($pos, $sub);
+    unless ($Test->ok( (defined $called and $called eq $sub), $name ))
+    {
+        $called = 'undef' unless defined $called;
+        $Test->diag("Got:\n\t'$called'\nExpected:\n\t'$sub'\n");
+    }
 }
 
 sub called_args_string_is
 {
-	my ($self, $pos, $sep, $expected, $name) = @_;
-	$name ||= "object sent expected args to sub at position $pos";
-	$Test->is_eq( $self->call_args_string( $pos, $sep ), $expected, $name );
+    my ($self, $pos, $sep, $expected, $name) = @_;
+    $name ||= "object sent expected args to sub at position $pos";
+    $Test->is_eq( $self->call_args_string( $pos, $sep ), $expected, $name );
 }
 
 sub called_args_pos_is
 {
-	my ($self, $pos, $argpos, $arg, $name) = @_;
-	$name ||= "object sent expected arg '$arg' to sub at position $pos";
-	$Test->is_eq( $self->call_args_pos( $pos, $argpos ), $arg, $name );
+    my ($self, $pos, $argpos, $arg, $name) = @_;
+    $name ||= "object sent expected arg '$arg' to sub at position $pos";
+    $Test->is_eq( $self->call_args_pos( $pos, $argpos ), $arg, $name );
 }
 
 sub fake_module
 {
-	my ($class, $modname, %subs) = @_;
+    my ($class, $modname, %subs) = @_;
 
-	if ($class->check_class_loaded( $modname ) and ! keys %subs)
-	{
-		require Carp;
-		Carp::croak( "No mocked subs for loaded module '$modname'" );
-	}
+    if ($class->check_class_loaded( $modname ) and ! keys %subs)
+    {
+        require Carp;
+        Carp::croak( "No mocked subs for loaded module '$modname'" );
+    }
 
-	$modname =~ s!::!/!g;
-	$INC{ $modname . '.pm' } = 1;
+    $modname =~ s!::!/!g;
+    $INC{ $modname . '.pm' } = 1;
 
-	my $warn = $SIG{__WARN__};
-	local $SIG{__WARN__} = sub { $warn->( $_[0] ) unless $_[0] =~ /redefined/ };
-	{
-		no strict 'refs';
-		${ $modname . '::' }{VERSION} ||= -1;
-	}
+    no warnings 'redefine';
+    {
+        no strict 'refs';
+        ${ $modname . '::' }{VERSION} ||= -1;
+    }
 
-	for my $sub (keys %subs)
-	{
-		my $type = reftype( $subs{ $sub } ) || '';
-		unless ( $type eq 'CODE' )
-		{
-			require Carp;
-			Carp::carp("'$sub' is not a code reference" );
-			next;
-		}
-		no strict 'refs';
-		*{ $_[1] . '::' . $sub } = $subs{ $sub };
-	}
+    for my $sub (keys %subs)
+    {
+        my $type = reftype( $subs{ $sub } ) || '';
+        unless ( $type eq 'CODE' )
+        {
+            require Carp;
+            Carp::carp("'$sub' is not a code reference" );
+            next;
+        }
+        no strict 'refs';
+        *{ $_[1] . '::' . $sub } = $subs{ $sub };
+    }
 }
 
 sub check_class_loaded
 {
-	my ($self, $class, $load_flag) = @_;
+    my ($self, $class, $load_flag) = @_;
 
-	(my $path    = $class) =~ s{::}{/}g;
-	return 1 if exists $INC{ $path . '.pm' };
+    (my $path    = $class) =~ s{::}{/}g;
+    return 1 if exists $INC{ $path . '.pm' };
 
-	my $symtable = \%main::;
-	my $found    = 1;
+    my $symtable = \%main::;
+    my $found    = 1;
 
-	for my $symbol ( split( '::', $class ))
-	{
-		unless (exists $symtable->{ $symbol . '::' })
-		{
-			$found = 0;
-			last;
-		}
+    for my $symbol ( split( '::', $class ))
+    {
+        unless (exists $symtable->{ $symbol . '::' })
+        {
+            $found = 0;
+            last;
+        }
 
-		$symtable = $symtable->{ $symbol . '::' };
-	}
+        $symtable = $symtable->{ $symbol . '::' };
+    }
 
-	return $found;
+    return $found;
 }
 
 sub fake_new
 {
-	my ($self, $class) = @_;
-	$self->fake_module( $class, new => sub { $self } );
+    my ($self, $class) = @_;
+    $self->fake_module( $class, new => sub { $self } );
 }
 
 sub DESTROY
 {
-	my $self = shift;
-	$self->_clear_calls();
-	$self->_clear_subs();
-	$self->_clear_logs();
-	$self->_clear_isas();
+    my $self = shift;
+    $self->_clear_calls();
+    $self->_clear_subs();
+    $self->_clear_logs();
+    $self->_clear_isas();
 }
 
 sub _get_key
 {
-	my $invocant = shift;
-	return blessed( $invocant ) ? refaddr( $invocant ) : $invocant;
+    my $invocant = shift;
+    return blessed( $invocant ) ? refaddr( $invocant ) : $invocant;
 }
 
 {
-	my %calls;
+    my %calls;
 
-	sub _calls
-	{
-		$calls{ _get_key( shift ) } ||= [];
-	}
+    sub _calls
+    {
+        $calls{ _get_key( shift ) } ||= [];
+    }
 
-	sub _clear_calls
-	{
-		delete $calls{ _get_key( shift ) };
-	}
+    sub _clear_calls
+    {
+        delete $calls{ _get_key( shift ) };
+    }
 }
 
 {
-	my %subs;
+    my %subs;
 
-	sub _subs
-	{
-		$subs{ _get_key( shift ) } ||= {};
-	}
+    sub _subs
+    {
+        $subs{ _get_key( shift ) } ||= {};
+    }
 
-	sub _clear_subs
-	{
-		delete $subs{ _get_key( shift ) };
-	}
+    sub _clear_subs
+    {
+        delete $subs{ _get_key( shift ) };
+    }
 }
 
 {
-	my %logs;
+    my %logs;
 
-	sub _set_log
-	{
-		my $key          = _get_key( shift );
-		my ($name, $log) = @_;
+    sub _set_log
+    {
+        my $key          = _get_key( shift );
+        my ($name, $log) = @_;
 
-		$logs{$key} ||= {};
+        $logs{$key} ||= {};
 
-		if ($log)
-		{
-			$logs{$key}{$name} = 1;
-		}
-		else
-		{
-			delete $logs{$key}{$name};
-		}
-	}
+        if ($log)
+        {
+            $logs{$key}{$name} = 1;
+        }
+        else
+        {
+            delete $logs{$key}{$name};
+        }
+    }
 
-	sub _logs
-	{
-		my $key    = _get_key( shift );
-		my ($name) = @_;
-		return exists $logs{$key}{$name};
-	}
+    sub _logs
+    {
+        my $key    = _get_key( shift );
+        my ($name) = @_;
+        return exists $logs{$key}{$name};
+    }
 
-	sub _clear_logs
-	{
-		delete $logs{ _get_key( shift ) };
-	}
+    sub _clear_logs
+    {
+        delete $logs{ _get_key( shift ) };
+    }
 }
 
 {
-	my %isas;
-    
-	sub _isas
-	{
-		$isas{ _get_key( shift ) } ||= {};
-	}
+    my %isas;
 
-	sub _clear_isas
-	{
-		delete $isas{ _get_key( shift ) };
-	}
+    sub _isas
+    {
+        $isas{ _get_key( shift ) } ||= {};
+    }
+
+    sub _clear_isas
+    {
+        delete $isas{ _get_key( shift ) };
+    }
 }
 
 1;
@@ -452,8 +451,8 @@ Test::MockObject - Perl extension for emulating troublesome interfaces
   ok( $mock->somemethod() );
 
   $mock->set_true( 'veritas')
-  	   ->set_false( 'ficta' )
-	   ->set_series( 'amicae', 'Sunny', 'Kylie', 'Bella' );
+         ->set_false( 'ficta' )
+       ->set_series( 'amicae', 'Sunny', 'Kylie', 'Bella' );
 
 =head1 DESCRIPTION
 
@@ -499,10 +498,10 @@ at given times than to fake query string input.
 Creates a new mock object.  By default, this is a blessed hash.  Pass a
 reference to bless that reference.
 
-	my $mock_array  = Test::MockObject->new( [] );
-	my $mock_scalar = Test::MockObject->new( \( my $scalar ) );
-	my $mock_code   = Test::MockObject->new( sub {} );
-	my $mock_glob   = Test::MockObject->new( \*GLOB );
+    my $mock_array  = Test::MockObject->new( [] );
+    my $mock_scalar = Test::MockObject->new( \( my $scalar ) );
+    my $mock_code   = Test::MockObject->new( sub {} );
+    my $mock_glob   = Test::MockObject->new( \*GLOB );
 
 =back
 
@@ -527,10 +526,10 @@ feature came about in version 0.09.  Shorter testing code is nice!
 Adds a coderef to the object.  This allows code to call the named method on the
 object.  For example, this code:
 
-	my $mock = Test::MockObject->new();
-	$mock->mock( 'fluorinate', 
-		sub { 'impurifying precious bodily fluids' } );
-	print $mock->fluorinate;
+    my $mock = Test::MockObject->new();
+    $mock->mock( 'fluorinate',
+        sub { 'impurifying precious bodily fluids' } );
+    print $mock->fluorinate;
 
 will print a helpful warning message.  Please note that methods are only added
 to a single object at a time and not the class.  (There is no small similarity
@@ -552,7 +551,7 @@ providing a mockup of a real module if you'd like to prevent the actual module
 from interfering with the nice fakery.  If you're mocking L<Regexp::English>,
 say:
 
-	$mock->fake_module( 'Regexp::English' );
+    $mock->fake_module( 'Regexp::English' );
 
 This is both a class and as an object method.  Beware that this must take place
 before the actual module has a chance to load.  Either wrap it in a BEGIN block
@@ -563,14 +562,14 @@ You can optionally add functions to the mocked module by passing them as name
 => coderef pairs to C<fake_module()>.  This is handy if you want to test an
 C<import()>:
 
-	my $import;
-	$mock->fake_module(
-		'Regexp::English',
-		import => sub { $import = caller }
-	);
-	use_ok( 'Regexp::Esperanto' );
-	is( $import, 'Regexp::Esperanto',
-		'Regexp::Esperanto should use() Regexp::English' );
+    my $import;
+    $mock->fake_module(
+        'Regexp::English',
+        import => sub { $import = caller }
+    );
+    use_ok( 'Regexp::Esperanto' );
+    is( $import, 'Regexp::Esperanto',
+        'Regexp::Esperanto should use() Regexp::English' );
 
 If you use C<fake_module()> to mock a module that already exists in memory --
 one you've loaded elsewhere perhaps, but do not pass any subroutines to mock,
@@ -587,13 +586,13 @@ Provides a fake constructor for the given module that returns the invoking mock
 object.  Used in conjunction with C<fake_module()>, you can force the tested
 unit to work with the mock object instead.
 
-	$mock->fake_module( 'CGI' );
-	$mock->fake_new( 'CGI' );
+    $mock->fake_module( 'CGI' );
+    $mock->fake_new( 'CGI' );
 
-	use_ok( 'Some::Module' );
-	my $s = Some::Module->new();
-	is( $s->{_cgi}, $mock,
-		'new() should create and store a new CGI object' );
+    use_ok( 'Some::Module' );
+    my $s = Some::Module->new();
+    is( $s->{_cgi}, $mock,
+        'new() should create and store a new CGI object' );
 
 =item * C<set_always(I<name>, I<value>)>
 
@@ -602,7 +601,7 @@ Adds a method of the specified name that always returns the specified value.
 =item * C<set_true(I<name_1>, I<name_2>, ... I<name_n>)>
 
 Adds a method of the specified name that always returns a true value.  This can
-take a list of names. 
+take a list of names.
 
 =item * C<set_false(I<name_1>, I<name_2>, ... I<name_n>)>
 
@@ -676,47 +675,47 @@ object, in list context.  In scalar context, returns only the method name.
 There are two important things to know about this method.  First, it starts at
 the beginning of the call list.  If your code runs like this:
 
-	$mock->set_true( 'foo' );
-	$mock->set_true( 'bar' );
-	$mock->set_true( 'baz' );
+    $mock->set_true( 'foo' );
+    $mock->set_true( 'bar' );
+    $mock->set_true( 'baz' );
 
-	$mock->foo();
-	$mock->bar( 3, 4 );
-	$mock->foo( 1, 2 );
+    $mock->foo();
+    $mock->bar( 3, 4 );
+    $mock->foo( 1, 2 );
 
 Then you might see output of:
 
-	my ($name, $args) = $mock->next_call();
-	print "$name (@$args)";
+    my ($name, $args) = $mock->next_call();
+    print "$name (@$args)";
 
-	# prints 'foo'
+    # prints 'foo'
 
-	$name = $mock->next_call();
-	print $name;
+    $name = $mock->next_call();
+    print $name;
 
-	# prints 'bar'
+    # prints 'bar'
 
-	($name, $args) = $mock->next_call();
-	print "$name (@$args)";
+    ($name, $args) = $mock->next_call();
+    print "$name (@$args)";
 
-	# prints 'foo 1 2'
+    # prints 'foo 1 2'
 
 If you provide an optional number as the I<position> argument, the method will
 skip that many calls, returning the data for the last one skipped.
 
-	$mock->foo();
-	$mock->bar();
-	$mock->baz();
+    $mock->foo();
+    $mock->bar();
+    $mock->baz();
 
-	$name = $mock->next_call();
-	print $name;
+    $name = $mock->next_call();
+    print $name;
 
-	# prints 'foo'
+    # prints 'foo'
 
-	$name = $mock->next_call( 2 );
-	print $name
+    $name = $mock->next_call( 2 );
+    print $name
 
-	# prints 'baz'
+    # prints 'baz'
 
 When it reaches the end of the list, it returns undef.  This is probably the
 most convenient method in the whole module, but for the sake of completeness
@@ -728,11 +727,11 @@ laziness!), there are several other methods.
 Returns the name of the method called on the object at a specified position.
 This is handy if you need to test a certain order of calls.  For example:
 
-	Some::Function( $mock );
-	is( $mock->call_pos(1),  'setup',
-		'Function() should first call setup()' );
-	is( $mock->call_pos(-1), 'end', 
-		'... and last call end()' );
+    Some::Function( $mock );
+    is( $mock->call_pos(1),  'setup',
+        'Function() should first call setup()' );
+    is( $mock->call_pos(-1), 'end',
+        '... and last call end()' );
 
 Positions can be positive or negative.  Please note that the first position is,
 in fact, 1.  (This may change in the future.  I like it, but am willing to
@@ -743,26 +742,26 @@ reconsider.)
 Returns a list of the arguments provided to the method called at the appropriate
 position.  Following the test above, one might say:
 
-	is( ($mock->call_args(1))[0], $mock,
-		'... passing the object to setup()' );
-	is( scalar $mock->call_args(-1), 0,
-		'... and no args to end()' );
+    is( ($mock->call_args(1))[0], $mock,
+        '... passing the object to setup()' );
+    is( scalar $mock->call_args(-1), 0,
+        '... and no args to end()' );
 
 =item * C<call_args_pos(I<call position>, I<argument position>)>
 
 Returns the argument at the specified position for the method call at the
 specified position.  One might rewrite the first test of the last example as:
 
-	is( $mock->call_args_pos(1, 1), $mock,
-		'... passing the object to setup()');
+    is( $mock->call_args_pos(1, 1), $mock,
+        '... passing the object to setup()');
 
 =item * C<call_args_string(I<position>, [ I<separator> ])>
 
 Returns a stringified version of the arguments at the specified position.  If
 no separator is given, they will not be separated.  This can be used as:
 
-	is( $mock->call_args_string(1), "$mock initialize",
-		'... passing object, initialize as arguments' );
+    is( $mock->call_args_string(1), "$mock initialize",
+        '... passing object, initialize as arguments' );
 
 =item * C<called_ok(I<method name>, [ I<test name> ])>
 
@@ -771,8 +770,8 @@ object.  This and the following methods use Test::Builder, so they integrate
 nicely with a test suite built around Test::Simple, Test::More, or anything
 else compatible:
 
-	$mock->foo();
-	$mock->called_ok( 'foo' );
+    $mock->foo();
+    $mock->called_ok( 'foo' );
 
 A generic default test name is provided.
 
@@ -808,13 +807,13 @@ of the method with C<-> when mocking it.
 
 That is:
 
-	$mock->set_true( '-foo', 'bar' );
+    $mock->set_true( '-foo', 'bar' );
 
 will set mock both C<foo()> and C<bar()>, causing both to return true.
 However, the object will log only calls to C<bar()>, not C<foo()>.  To log
 C<foo()> again, merely mock it again without the leading C<->:
 
-	$mock->set_true( 'foo' );
+    $mock->set_true( 'foo' );
 
 C<$mock> will log all subsequent calls to C<foo()> again.
 
@@ -874,10 +873,10 @@ L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2002E<sol>07E<sol>10E<sol>t
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002 - 2006 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
+Copyright (c) 2002 - 2008 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
 
 This program is free software; you can use, modify, and redistribute it under
-the same terms as Perl 5.8.x itself.
+the same terms as Perl 5.10.x itself.
 
 See http://www.perl.com/perl/misc/Artistic.html
 
