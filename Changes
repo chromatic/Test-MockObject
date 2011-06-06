@@ -1,7 +1,12 @@
 Revision history for Perl extension Test::MockObject.
 
+1.20110606
+    Sun Jun 04 2011
+    - converted to Dist::Zilla
+    - posted to GitHub
+
 1.09
-    Tue May 27 06:11:24 UTC 2008 ($Rev$, $Author$)
+    Tue May 27 06:11:24 UTC 2008
     - removed a buggy workaround for C<no warnings 'redefine';>, now that 5.6.2
       is the baseline
 

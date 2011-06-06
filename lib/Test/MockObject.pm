@@ -3,9 +3,6 @@ package Test::MockObject;
 use strict;
 use warnings;
 
-use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.09';
-
 use Scalar::Util qw( blessed refaddr reftype weaken );
 use UNIVERSAL::isa;
 use UNIVERSAL::can;
@@ -203,6 +200,8 @@ sub next_call
 
 sub AUTOLOAD
 {
+    our $AUTOLOAD;
+
     my $self = shift;
     my $sub;
     {
@@ -873,7 +872,7 @@ L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2002E<sol>07E<sol>10E<sol>t
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002 - 2008 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
+Copyright (c) 2002 - 2011 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
 
 This program is free software; you can use, modify, and redistribute it under
 the same terms as Perl 5.10.x itself.

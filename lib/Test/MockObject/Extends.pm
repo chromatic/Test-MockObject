@@ -8,9 +8,6 @@ use Test::MockObject;
 use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
 
-use vars qw( $VERSION $AUTOLOAD );
-$VERSION = '1.09';
-
 sub new
 {
     my ($class, $fake_class) = @_;
@@ -107,6 +104,8 @@ sub gen_autoload
 
     sub
     {
+        our $AUTOLOAD;
+
         my $method = substr( $AUTOLOAD, rindex( $AUTOLOAD, ':' ) +1 );
         return if $method eq 'DESTROY';
 
@@ -313,5 +312,5 @@ No known bugs.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 - 2008, chromatic.  All rights reserved.  You may use,
+Copyright (c) 2004 - 2011, chromatic.  All rights reserved.  You may use,
 modify, and distribute this module under the same terms as Perl 5.10
