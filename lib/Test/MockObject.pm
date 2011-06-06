@@ -4,8 +4,14 @@ use strict;
 use warnings;
 
 use Scalar::Util qw( blessed refaddr reftype weaken );
-use UNIVERSAL::isa;
-use UNIVERSAL::can;
+
+sub import
+{
+    my $self = shift;
+    return unless grep /^-debug/, @_;
+    eval "use UNIVERSAL::isa 'verbose'";
+    eval "use UNIVERSAL::can '-always_warn'";
+}
 
 use Test::Builder;
 
@@ -450,7 +456,7 @@ Test::MockObject - Perl extension for emulating troublesome interfaces
   ok( $mock->somemethod() );
 
   $mock->set_true( 'veritas')
-         ->set_false( 'ficta' )
+       ->set_false( 'ficta' )
        ->set_series( 'amicae', 'Sunny', 'Kylie', 'Bella' );
 
 =head1 DESCRIPTION
@@ -467,21 +473,34 @@ Test::MockObject allows you to create objects that conform to particular
 interfaces with very little code.  You don't have to reimplement the behavior,
 just the input and the output.
 
-=head2 IMPORTANT CAVEAT FOR TESTERS
+=head2 IMPORTANT CAVEATS
 
-Please note that it is possible to write highly detailed unit tests that pass
-even when your integration tests may fail.  Testing the pieces individually
-does not excuse you from testing the whole thing together.  I consider this to
-be a feature.
+Before you go wild with your testing powers, consider three caveats:
 
-In cases where you only need to mock one or two pieces of an existing module,
-consider L<Test::MockObject::Extends> instead.
+=over 4
+
+=item * It is possible to write highly detailed unit tests that pass even when
+your integration tests may fail.  Testing the pieces individually does not
+excuse you from testing the whole thing together.
+
+=item * In cases where you only need to mock one or two pieces of an existing
+module, consider L<Test::MockObject::Extends> instead.
+
+=item * If the code under testing produces strange errors about type checks,
+pass the C<-debug> flag when using C<Test::MockObject> or
+C<Test::MockObject::Extends>. This will load both L<UNIVERSAL::isa> and
+L<UNIVERSAL::can> to perform additional debugging on the incorrect use of both
+methods from the L<UNIVERSAL> package. (This behavior used to be active by
+default, but that was, however correct, probably a burden to onerous for the
+CPAN.)
+
+=back
 
 =head2 EXPORT
 
-None by default.  Maybe the Test::Builder accessories, in a future version.
+None.
 
-=head2 FUNCTIONS
+=head2 METHODS
 
 The most important thing a Mock Object can do is to conform sufficiently to an
 interface.  For example, if you're testing something that relies on CGI.pm, you
@@ -532,7 +551,7 @@ object.  For example, this code:
 
 will print a helpful warning message.  Please note that methods are only added
 to a single object at a time and not the class.  (There is no small similarity
-to the Self programming language or the Class::Prototyped module.)
+to the Self programming language or the L<Class::Prototyped> module.)
 
 This method forms the basis for most of Test::MockObject's testing goodness.
 
@@ -543,7 +562,7 @@ try to do what you mean, but I make few guarantees.
 
 =item * C<fake_module(I<module name>), [ I<subname> => I<coderef>, ... ]
 
-B<Note:> this method will likely become a separate module in the near future.
+B<Note:> See L<Test::MockModule> for an alternate (and better) approach.
 
 Lies to Perl that it has already loaded a named module.  This is handy when
 providing a mockup of a real module if you'd like to prevent the actual module

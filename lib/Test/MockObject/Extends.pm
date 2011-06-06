@@ -5,6 +5,13 @@ use warnings;
 
 use Test::MockObject;
 
+sub import
+{
+    my $self = shift;
+    eval "use Test::MockObject";
+    Test::MockObject->import( @_ );
+}
+
 use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
 
