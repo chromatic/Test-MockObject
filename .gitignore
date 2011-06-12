@@ -1,5 +1,2 @@
-Build
-MYMETA.*
+!.gitignore
 Test-MockObject-*
-_build/
-blib/
