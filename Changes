@@ -1,5 +1,9 @@
 Revision history for Perl extension Test::MockObject.
 
+{{$NEXT}}
+    - removed Module::Build detritus
+    - improved Test::Warn testing dependency
+
 1.20110606
     Sun Jun 04 2011
     - converted to Dist::Zilla
