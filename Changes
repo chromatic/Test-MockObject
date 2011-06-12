@@ -1,6 +1,8 @@
 Revision history for Perl extension Test::MockObject.
 
 {{$NEXT}}
+
+1.20110612 2011-06-11 23:53:50 America/Los_Angeles
     - removed Module::Build detritus
     - improved Test::Warn testing dependency
 
