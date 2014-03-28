@@ -4,6 +4,8 @@ use strict;
 use warnings;
 
 use Test::MockObject;
+use Hash::Util ();
+use fields ();
 
 sub import
 {
@@ -25,7 +27,23 @@ sub new
     $class->check_class_loaded( $parent_class );
     my $self         = blessed( $fake_class ) ? $fake_class : {};
 
-    bless $self, $class->gen_package( $parent_class );
+    # Fields now locks the hash as of 5.9.0 - #84535
+    if ($^V gt v5.9.0 && blessed( $fake_class ) && do {
+            no strict 'refs';
+            (%{$parent_class . '::FIELDS'}) # uses fields
+    }) {
+        # bypass prototypes
+        &Hash::Util::unlock_hash(\%$fake_class);
+        bless $self, $class->gen_package( $parent_class );
+        &Hash::Util::lock_keys(\%$fake_class,
+            fields::_accessible_keys($parent_class));
+    }
+    else
+    {
+        bless $self, $class->gen_package( $parent_class );
+    }
+
+    return $self;
 }
 
 sub check_class_loaded
@@ -202,8 +220,8 @@ Test::MockObject::Extends - mock part of an object or class
 =head1 DESCRIPTION
 
 Test::MockObject::Extends lets you mock one or more methods of an existing
-object or class.  This can be very handy when you're testing a well-factored
-module that does almost exactly what you want.  Wouldn't it be handy to take
+object or class. This can be very handy when you're testing a well-factored
+module that does almost exactly what you want. Wouldn't it be handy to take
 control of a method or two to make sure you receive testable results?  Now you
 can.
 
@@ -213,9 +231,9 @@ can.
 
 =item C<new( $object | $class )>
 
-C<new()> takes one optional argument, the object or class to mock.  If you're
+C<new()> takes one optional argument, the object or class to mock. If you're
 mocking a method for an object that holds internal state, create an appropriate
-object, then pass it to this constructor.  B<NOTE:> this will modify the object
+object, then pass it to this constructor. B<NOTE:> this will modify the object
 in place.
 
 If you're mocking an object that does not need state, as in the cases where
@@ -235,14 +253,14 @@ instance of that class; I<this does not mock the class itself>.
 =item C<mock( $methodname, $sub_ref )>
 
 See the documentation for Test::MockObject for all of the ways to mock methods
-and to retrieve method logging information.  These methods return the invocant,
+and to retrieve method logging information. These methods return the invocant,
 so you can chain them.
 
 =item C<unmock( $methodname )>
 
-Removes any active mocking of the named method.  This means any calls to that
+Removes any active mocking of the named method. This means any calls to that
 method will hit the method of that name in the class being mocked, if it
-exists.  This method returns the invocant, you can chain it.
+exists. This method returns the invocant, you can chain it.
 
 =item C<isa( $class )>
 
@@ -259,7 +277,7 @@ To do its magic, this module uses several internal methods:
 
 =item * C<check_class_loaded( $parent_class )>
 
-This verifies that you have the mockee defined.  If not, it attempts to load
+This verifies that you have the mockee defined. If not, it attempts to load
 the corresponding module for you.
 
 =item * C<gen_autoload( $extended )>
@@ -267,7 +285,7 @@ the corresponding module for you.
 Returns an AUTOLOAD subroutine for the mock object that checks that the
 extended object (or class) can perform the requested method, that
 L<Test::MockObject> can perform it, or that the parent has an appropriate
-AUTOLOAD of its own.  (It should have its own C<can()> in that case too
+AUTOLOAD of its own. (It should have its own C<can()> in that case too
 though.)
 
 =item * C<gen_can( $extended )>
@@ -299,7 +317,7 @@ Returns the class name of the invocant, whether it's an object or a class name.
 =head1 CAVEATS
 
 There may be some weird corner cases with dynamically generated methods in the
-mocked class.  You really should use subroutine declarations though, or at
+mocked class. You really should use subroutine declarations though, or at
 least set C<can()> appropriately.
 
 There are also potential name collisions with methods in this module or
@@ -309,9 +327,9 @@ C<Test::MockObject>, though this should be rare.
 
 chromatic, E<lt>chromatic at wgz dot orgE<gt>
 
-Documentation bug fixed by Stevan Little.  Additional AUTOLOAD approach
-suggested by Adam Kennedy.  Other bugs reported by Paul the Nomad and Praveen
-Ray.  Thank you all!
+Documentation bug fixed by Stevan Little. Additional AUTOLOAD approach
+suggested by Adam Kennedy. Field-based objects supported by Gavin Mogan. Other
+bugs reported by Paul the Nomad and Praveen Ray. Thank you all!
 
 =head1 BUGS
 
@@ -319,5 +337,5 @@ No known bugs.
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 - 2011, chromatic.  All rights reserved.  You may use,
+Copyright (c) 2004 - 2014, chromatic. All rights reserved. You may use,
 modify, and distribute this module under the same terms as Perl 5.10
