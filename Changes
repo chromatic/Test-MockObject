@@ -1,6 +1,8 @@
 Revision history for Perl extension Test::MockObject.
 
 {{$NEXT}}
+
+1.20140328 2014-03-28 16:17:59-07:00 America/Los_Angeles
     - support added for fields-based objects (Gavin Mogan, RT #84535)
 
 1.20120301 2012-03-01 13:17:20 America/Los_Angeles
