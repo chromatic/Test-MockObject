@@ -30,7 +30,7 @@ sub new
     # Fields now locks the hash as of 5.9.0 - #84535
     if ($^V gt v5.9.0 && blessed( $fake_class ) && do {
             no strict 'refs';
-            (%{$parent_class . '::FIELDS'}) # uses fields
+            exists ${$parent_class . '::'}{FIELDS} # uses fields
     }) {
         # bypass prototypes
         &Hash::Util::unlock_hash(\%$fake_class);
