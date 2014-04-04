@@ -4,8 +4,6 @@ use strict;
 use warnings;
 
 use Test::MockObject;
-use Hash::Util ();
-use fields ();
 
 sub import
 {
