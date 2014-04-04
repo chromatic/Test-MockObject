@@ -17,6 +17,8 @@ sub import
 use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
 
+use constant PERL_5_9 => $^V gt v5.9.0;
+
 sub new
 {
     my ($class, $fake_class) = @_;
@@ -28,7 +30,7 @@ sub new
     my $self         = blessed( $fake_class ) ? $fake_class : {};
 
     # Fields now locks the hash as of 5.9.0 - #84535
-    if ($^V gt v5.9.0 && blessed( $fake_class ) && do {
+    if (PERL_5_9 && blessed( $fake_class ) && do {
             no strict 'refs';
             exists ${$parent_class . '::'}{FIELDS} # uses fields
     }) {
