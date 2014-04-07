@@ -4,8 +4,6 @@ use strict;
 use warnings;
 
 use Test::MockObject;
-use Hash::Util ();
-use fields ();
 
 sub import
 {
@@ -16,6 +14,8 @@ sub import
 
 use Devel::Peek  'CvGV';
 use Scalar::Util 'blessed';
+
+use constant PERL_5_9 => $^V gt v5.9.0;
 
 sub new
 {
@@ -28,9 +28,9 @@ sub new
     my $self         = blessed( $fake_class ) ? $fake_class : {};
 
     # Fields now locks the hash as of 5.9.0 - #84535
-    if ($^V gt v5.9.0 && blessed( $fake_class ) && do {
+    if (PERL_5_9 && blessed( $fake_class ) && do {
             no strict 'refs';
-            (%{$parent_class . '::FIELDS'}) # uses fields
+            exists ${$parent_class . '::'}{FIELDS} # uses fields
     }) {
         # bypass prototypes
         &Hash::Util::unlock_hash(\%$fake_class);
