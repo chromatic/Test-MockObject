@@ -1,6 +1,8 @@
 Revision history for Perl extension Test::MockObject.
 
 {{$NEXT}}
+
+1.20140408 2014-04-07 17:38:44-07:00 America/Los_Angeles
     - enabled Travis CI (no user-visible changes)
     - improved fields-based object support (Olivier Mengué, Maxime Soulé)
 
