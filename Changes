@@ -1,6 +1,8 @@
 Revision history for Perl extension Test::MockObject.
 
 {{$NEXT}}
+    - updated CGI dependency
+    - improved README for GitHub (Rob Van Dam, GH PR #9)
 
 1.20140408 2014-04-07 17:38:44-07:00 America/Los_Angeles
     - enabled Travis CI (no user-visible changes)
