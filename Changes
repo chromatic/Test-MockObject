@@ -1,6 +1,8 @@
 Revision history for Perl extension Test::MockObject.
 
 {{$NEXT}}
+
+1.20150527 2015-05-27 08:33:52-07:00 America/Los_Angeles
     - improved dependencies (build/run/requires), (Olivier Mengué, GH PR #10)
     - improved runtime loading (Olivier Mengué, GH PR #11)
 
