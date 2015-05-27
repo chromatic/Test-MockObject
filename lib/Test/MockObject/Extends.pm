@@ -8,7 +8,6 @@ use Test::MockObject;
 sub import
 {
     my $self = shift;
-    eval "use Test::MockObject";
     Test::MockObject->import( @_ );
 }
 
