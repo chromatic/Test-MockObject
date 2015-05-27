@@ -9,8 +9,14 @@ sub import
 {
     my $self = shift;
     return unless grep /^-debug/, @_;
-    eval "use UNIVERSAL::isa 'verbose'";
-    eval "use UNIVERSAL::can '-always_warn'";
+    eval {
+	require UNIVERSAL::isa;
+	UNIVERSAL::isa::->import('verbose');
+    };
+    eval {
+	require UNIVERSAL::can;
+	UNIVERSAL::can::->import('-always_warn');
+    };
 }
 
 use Test::Builder;
