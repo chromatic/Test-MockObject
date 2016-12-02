@@ -1,6 +1,8 @@
 Revision history for Perl extension Test::MockObject.
 
 {{$NEXT}}
+
+1.20161202 2016-12-02 15:12:41-08:00 America/Los_Angeles
     - renamed README.pod to README (RT #118831)
 
 1.20150527 2015-05-27 08:33:52-07:00 America/Los_Angeles
