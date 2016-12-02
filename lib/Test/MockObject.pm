@@ -10,12 +10,12 @@ sub import
     my $self = shift;
     return unless grep /^-debug/, @_;
     eval {
-	require UNIVERSAL::isa;
-	UNIVERSAL::isa::->import('verbose');
+    require UNIVERSAL::isa;
+    UNIVERSAL::isa::->import('verbose');
     };
     eval {
-	require UNIVERSAL::can;
-	UNIVERSAL::can::->import('-always_warn');
+    require UNIVERSAL::can;
+    UNIVERSAL::can::->import('-always_warn');
     };
 }
 
@@ -897,10 +897,10 @@ L<http:E<sol>E<sol>www.perl.comE<sol>pubE<sol>aE<sol>2002E<sol>07E<sol>10E<sol>t
 
 =head1 COPYRIGHT
 
-Copyright (c) 2002 - 2011 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
+Copyright (c) 2002 - 2016 by chromatic E<lt>chromatic at wgz dot orgE<gt>.
 
 This program is free software; you can use, modify, and redistribute it under
-the same terms as Perl 5.10.x itself.
+the same terms as Perl 5.24 itself.
 
 See http://www.perl.com/perl/misc/Artistic.html
 
