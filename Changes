@@ -1,7 +1,10 @@
 Revision history for Perl extension Test::MockObject.
 
 {{$NEXT}}
-    - allow mock() to mock multiple methods at once (GH PR #19, Felipe Gasper)
+    -
+
+1.20200122 2020-01-22 10:47:03-08:00 America/Los_Angeles
+    - allow mock() to mock multiple methods at once (GH PR #19, Felipe Gaspar)
     - tidy up dist metadata (GH PR #18, Mohammad S. Anwar)
 
 1.20191002 2019-10-02 09:32:54-07:00 America/Los_Angeles
